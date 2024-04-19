@@ -5,11 +5,11 @@
 */
 
 #include "Bonezegei_ULN2003_Stepper.h"
-//Param1 Input Pin1
-//Param1 Input Pin2
-//Param1 Input Pin3
-//Param1 Input Pin4
-Bonezegei_ULN2003_Stepper Stepper(16, 17, 18, 19);
+//Bonezegei_ULN2003_Stepper Stepper(15, 2, 0, 4);
+//Bonezegei_ULN2003_Stepper Stepper(16, 17, 5, 18);
+
+
+
 
 // Set This According to your Preference
 #define FORWARD 1
@@ -17,14 +17,56 @@ Bonezegei_ULN2003_Stepper Stepper(16, 17, 18, 19);
 
 void setup() {
   //Inititalize Pins
-  Stepper.begin();
+  BaseType_t returnedVal;
+  TaskHandle_t xHandle1 = NULL;
+  TaskHandle_t xHandle2 = NULL;
+  Serial.begin(115200);
+  returnedVal = xTaskCreate(
+                  firstMotorCode,
+                  "Motor1",
+                  1000,
+                  (void *) 1,
+                  tskIDLE_PRIORITY,
+                  &xHandle1);
 
-  // Speed in Milli seconds per step
-  // Default Value is 3 
-  Stepper.setSpeed(2);
+  if(returnedVal != pdPASS){
+    Serial.println("FAILURE 1");
+  }
+  
+  returnedVal = xTaskCreate(
+                  secondMotorCode,
+                  "Motor1",
+                  1000,
+                  (void *) 1,
+                  tskIDLE_PRIORITY,
+                  &xHandle2);
+
+  if(returnedVal != pdPASS){
+    Serial.println("FAILURE 2");
+  }
+
+  delay(50000);
+  vTaskDelete(xHandle2);
 }
 
 void loop() {
-  Stepper.step(FORWARD, 2048);
-  delay(500);
+
+}
+
+void firstMotorCode(void *pvParameters){
+  Bonezegei_ULN2003_Stepper myStepper(15,2,0,4);
+  myStepper.begin();
+  for(int i = 0;;i++){ 
+    myStepper.setSpeed(i);
+    myStepper.step(1, 100);
+  }
+}
+
+void secondMotorCode(void *pvParameters){
+  Bonezegei_ULN2003_Stepper myStepper(16, 17, 5, 18);
+  myStepper.begin();
+  for(int i = 0;;i++){
+    myStepper.setSpeed(i);
+    myStepper.step(1, 100);
+  }
 }
