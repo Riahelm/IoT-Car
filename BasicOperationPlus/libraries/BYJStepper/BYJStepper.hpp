@@ -1,9 +1,8 @@
 #ifndef STEPPER_H
 #define STEPPER_H
 #include "Arduino.h"
-#include "Direction.h"
-
-class Stepper{
+#include "../Direction/Direction.hpp"
+class BYJStepper{
   private:
     int pins[4];
 
@@ -11,7 +10,7 @@ class Stepper{
     int speed;
     int stepsLeft;
     Direction dir;
-    Stepper(int pin1, int pin2, int pin3, int pin4);
+    BYJStepper(int pin1, int pin2, int pin3, int pin4);
 
     void initPins();
 
