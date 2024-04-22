@@ -1,4 +1,4 @@
-#include "Direction.h"
+#include "Direction.hpp"
 
 int intFromDir(Direction dir){
     return dir == Direction::REVERSE? 0 : 1;
