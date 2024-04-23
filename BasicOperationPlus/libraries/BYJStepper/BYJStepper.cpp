@@ -1,4 +1,4 @@
-#include "BYJStepper.hpp"
+#include "BYJStepper.h"
 #include "Arduino.h"
 
 BYJStepper::BYJStepper(int pin1, int pin2, int pin3, int pin4)
