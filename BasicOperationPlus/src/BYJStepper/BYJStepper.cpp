@@ -1,4 +1,4 @@
-#include "BYJStepper.hpp"
+#include "BYJStepper.h"
 #include "Arduino.h"
 
 BYJStepper::BYJStepper(int pin1, int pin2, int pin3, int pin4)
@@ -11,7 +11,7 @@ BYJStepper::BYJStepper(int pin1, int pin2, int pin3, int pin4)
     BYJStepper::dir  = Direction::FORWARD;
 }
 
-void BYJStepper::initPins()
+void BYJStepper::initPins(void)
 {
     for(int i = 0; i < 4; i++){
         pinMode(pins[i], OUTPUT);
@@ -25,7 +25,7 @@ void BYJStepper::oneStep(void)
 
 void BYJStepper::oneStep(Direction dir)
 {
-    step(dir);
+    step(dir, 1);
 }
 
 void BYJStepper::step(Direction dir, int stepNum)
