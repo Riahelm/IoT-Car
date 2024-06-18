@@ -1,11 +1,13 @@
-#ifndef _STEPPER_H_
-#define _STEPPER_H_
+#ifndef _THREADSTEPPER_H_
+#define _THREADSTEPPER_H_
 #include <Arduino.h>
-#include "../Direction/Direction.h"
-class BYJStepper{
+#include <thread>
+#include "..\Direction\Direction.h"
+
+class ThreadStepper: public std::thread{
 public:
   
-  BYJStepper(int, int, int, int);
+  ThreadStepper(int, int, int, int);
 
   void initPins(void);
 
@@ -32,4 +34,4 @@ private:
   int pins[4];
 };
 
-#endif //_STEPPER_H_
+#endif //_THREADSTEPPER_H_

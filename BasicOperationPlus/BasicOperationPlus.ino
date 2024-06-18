@@ -1,4 +1,4 @@
-#include "libraries\BYJStepper\BYJStepper.hpp"
+#include "src\ThreadStepper\ThreadStepper.h"
 
 void setup() {
   BaseType_t returnedVal;
@@ -16,10 +16,10 @@ void setup() {
   if(returnedVal != pdPASS){
     Serial.println("FAILURE 1");
   }
-  
+
   returnedVal = xTaskCreate(
                   secondMotorCode,
-                  "Motor1",
+                  "Motor2",
                   1000,
                   (void *) 1,
                   tskIDLE_PRIORITY,
@@ -34,9 +34,9 @@ void setup() {
 }
 
 void firstMotorCode(void *pvParam){
-  BYJStepper step(15,2,0,4);
+  //(ThreadStepper) pvParam;
   for(;;){
-    Serial.println("Ciao1");
+    
   }
 }
 

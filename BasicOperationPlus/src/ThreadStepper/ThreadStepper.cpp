@@ -1,53 +1,53 @@
-#include "BYJStepper.h"
+#include "ThreadStepper.h"
 #include "Arduino.h"
 
-BYJStepper::BYJStepper(int pin1, int pin2, int pin3, int pin4)
+ThreadStepper::ThreadStepper(int pin1, int pin2, int pin3, int pin4) 
 {
     pins[0] = pin1;
     pins[1] = pin2;
     pins[2] = pin3;
     pins[3] = pin4;
-    BYJStepper::speed= 2;
-    BYJStepper::dir  = Direction::FORWARD;
+    ThreadStepper::speed = 2;
+    ThreadStepper::dir   = Direction::FORWARD;
 }
 
-void BYJStepper::initPins(void)
+void ThreadStepper::initPins(void)
 {
     for(int i = 0; i < 4; i++){
         pinMode(pins[i], OUTPUT);
     }
 }
 
-void BYJStepper::oneStep(void)
+void ThreadStepper::oneStep(void)
 {
     step(1);
 }
 
-void BYJStepper::oneStep(Direction dir)
+void ThreadStepper::oneStep(Direction dir)
 {
     step(dir, 1);
 }
 
-void BYJStepper::step(Direction dir, int stepNum)
+void ThreadStepper::step(Direction dir, int stepNum)
 {
     setDirection(dir);
     step(stepNum);
 }
 
-void BYJStepper::stepAngle(int angle)
+void ThreadStepper::stepAngle(int angle)
 {
     step(dir, angle/5.625);
 }
 
-void BYJStepper::stepAngle(Direction dir, int angle)
+void ThreadStepper::stepAngle(Direction dir, int angle)
 {
     setDirection(dir);
     stepAngle(angle);
 }
 
-void BYJStepper::step(int stepNum)
+void ThreadStepper::step(int stepNum)
 {
-    BYJStepper::stepsLeft = stepNum;
+    ThreadStepper::stepsLeft = stepNum;
     int count;
     if(dir == Direction::FORWARD){
         for (int i = 0; i < stepNum; i++)
@@ -71,27 +71,27 @@ void BYJStepper::step(int stepNum)
 
 
 
-void BYJStepper::setDirection(Direction dir)
+void ThreadStepper::setDirection(Direction dir)
 {
-    BYJStepper::dir = dir;
+    ThreadStepper::dir = dir;
 }
 
-Direction BYJStepper::getDirection()
+Direction ThreadStepper::getDirection()
 {
     return dir;
 }
 
-void BYJStepper::setSpeed(int speed)
+void ThreadStepper::setSpeed(int speed)
 {
-    BYJStepper::speed = speed;
+    ThreadStepper::speed = speed;
 }
 
-int BYJStepper::getSpeed()
+int ThreadStepper::getSpeed()
 {
-    return BYJStepper::speed;
+    return ThreadStepper::speed;
 }
 
-int BYJStepper::getRemainingSteps()
+int ThreadStepper::getRemainingSteps()
 {
-    return BYJStepper::stepsLeft;
+    return ThreadStepper::stepsLeft;
 }
