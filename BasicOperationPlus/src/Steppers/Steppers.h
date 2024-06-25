@@ -24,7 +24,7 @@ typedef enum StepperInstructions{
 
 class Steppers{
     public:
-        Steppers(const int (&leftPins)[4], const int (&rightPins)[4]);
+        Steppers(const int (&leftPins)[4], const int (&rightPins)[4], int count);
         ~Steppers();
 
         void start(void);
@@ -37,7 +37,7 @@ class Steppers{
         int speed;
         std::list<StepperInstructions_t> instructions;
         std::list<int> params;
-        //MySemaphore instrCount;
+        MySemaphore *instrCount;
         
         int pinsSx[4];
         int pinsDx[4];
