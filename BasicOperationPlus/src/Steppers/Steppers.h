@@ -14,6 +14,7 @@
 
 #include <tuple>
 #include <list>
+#include "../MySemaphore/MySemaphore.h"
 
 enum StepperInstructions{
     GoBackwards,
@@ -28,12 +29,12 @@ class Steppers{
         ~Steppers();
 
         void start(void);
-        void addInstruction(tuple<StepperInstructions, int> instrAndParam);
+        void addInstruction(std::tuple<StepperInstructions, int> instrAndParam);
     private:
         int speed;
-        tuple<std::list<tuple<StepperInstructions, int>>, 
-              std::counting_semaphore> instr;
-        
+        std::tuple<std::list<std::tuple<StepperInstructions, int>>,
+              MySemaphore> instructions;
+
         int pinsSx[4];
         int pinsDx[4];
     

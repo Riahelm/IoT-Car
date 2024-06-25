@@ -1,7 +1,5 @@
 #include "Steppers.h"
 #include "Arduino.h"
-#include <semaphore>
-#include <tuple>
 Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
 
     this->speed = 2;
@@ -24,11 +22,13 @@ Steppers::~Steppers(){};
 
 Steppers::start(){
     while(true){
-        get<1>(instr).acquire(1);
-        tuple<StepperInstructions, int> instrAndParams;
-        instrAndParams = get<0>(instr).front();
-        param = get<1>(instrAndParams);
-        switch(get<0>(instrAndParams)){
+        
+        get<1>(instructions).acquire();
+        auto instrAndParam = get<0>(instructions);
+        auto instr = get<0>(instrAndParam);
+        auto param = get<1>(instrAndParam);
+        
+        switch(instr){
             case GoForwards:
                 goForwards(param);
                 break;
@@ -107,9 +107,9 @@ void Steppers::turnRight(int millimeters){
 }
 
 void Steppers::addInstruction(tuple<StepperInstructions, int> instrAndParam) {
-    using std::get
-    get<0>(instr).push_back(instrAndParam);
-    get<1>(instr).release(1);
+    
+    get<0>(instructions).push_back(instrAndParam);
+    get<1>(instructions).release();
 };
 
 void Steppers::lowPins(void){
