@@ -1,9 +1,9 @@
 #include "Steppers.h"
 #include "Arduino.h"
-Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4], int count){
+Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
 
     this->speed = 2;
-    instrCount = new MySemaphore(count);
+    instrCount = new MySemaphore(0);
     for (int i = 0; i < 4; i++)
     {
         pinsSx[i] = leftPins[i];

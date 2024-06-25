@@ -24,7 +24,7 @@ typedef enum StepperInstructions{
 
 class Steppers{
     public:
-        Steppers(const int (&leftPins)[4], const int (&rightPins)[4], int count);
+        Steppers(const int (&leftPins)[4], const int (&rightPins)[4]);
         ~Steppers();
 
         void start(void);

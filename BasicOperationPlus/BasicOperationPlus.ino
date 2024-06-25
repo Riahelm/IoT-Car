@@ -12,7 +12,7 @@ void setup() {
 }
 
 void loop() {
-  Steppers motors(leftMotorPins, rightMotorPins, 0);
+  Steppers motors(leftMotorPins, rightMotorPins);
   
   motors.goForwards(500);
   motors.turnLeft(G45);
