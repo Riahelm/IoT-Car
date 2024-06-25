@@ -1,20 +1,21 @@
 // MySemaphore.h
 
-#ifndef MY_SEMAPHORE_H
-#define MY_SEMAPHORE_H
+#ifndef MYSEMAPHORE_H
+#define MYSEMAPHORE_H
 
 #include <mutex>
 #include <condition_variable>
 
 class MySemaphore{
     public:
-        MySemaphore(unsigned long count);
-        inline void release();
-        inline void acquire();
+        MySemaphore(int count);
+        ~MySemaphore();
+        void release();
+        void acquire();
     private:
         std::mutex mtx;
         std::condition_variable cv;
-        unsigned long count;
+        int count;
 };
 
 #endif // MySemaphore.h
