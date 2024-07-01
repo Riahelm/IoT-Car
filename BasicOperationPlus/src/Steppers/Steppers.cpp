@@ -2,8 +2,9 @@
 #include "Arduino.h"
 Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
 
-    this->speed = 2;
-    instrCount = new MySemaphore(0);
+    this->speed  = 2;
+    instrCount   = new MySemaphore(0);
+    
     for (int i = 0; i < 4; i++)
     {
         pinsSx[i] = leftPins[i];
@@ -12,8 +13,6 @@ Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
         pinMode(pinsSx[i], OUTPUT);
         pinMode(pinsDx[i], OUTPUT);
 
-        Serial.println("Turned on: " + String(pinsSx[i]));
-        Serial.println("Turned on: " + String(pinsDx[i]));
     }
     
 };
@@ -28,15 +27,19 @@ void Steppers::start(){
 
         switch(instructions.front()){
             case GoForwards:
+                Serial.println("I go forward");
                 goForwards(param);
                 break;
             case GoBackwards:
+                Serial.println("I go backward");
                 goBackwards(param);
                 break;
             case TurnLeft:
+                Serial.println("I turn left");
                 turnLeft(param);
                 break;
             case TurnRight:
+                Serial.println("I turn right");
                 turnRight(param);
                 break;
         }
@@ -52,8 +55,6 @@ void Steppers::goForwards(int millimeters){
         count = i % 4;
         digitalWrite(pinsSx[count], HIGH);
         digitalWrite(pinsDx[count], HIGH);
-        Serial.println("Flipped: " + String(pinsSx[i]));
-        Serial.println("Flipped: " + String(pinsDx[i]));
         delay(this->speed);
         digitalWrite(pinsSx[count], LOW);
         digitalWrite(pinsDx[count], LOW);
@@ -65,13 +66,13 @@ void Steppers::goForwards(int millimeters){
 
 void Steppers::goBackwards(int millimeters){
     int count;
-    for (int i = mmToSteps(millimeters); i > 0; i++){
+    for (int i = 0; i < mmToSteps(millimeters); i++){
         count = i % 4;
-        digitalWrite(pinsSx[count], HIGH);
-        digitalWrite(pinsDx[count], HIGH);
+        digitalWrite(pinsSx[3 - count], HIGH);
+        digitalWrite(pinsDx[3 - count], HIGH);
         delay(this->speed);
-        digitalWrite(pinsSx[count], LOW);
-        digitalWrite(pinsDx[count], LOW);
+        digitalWrite(pinsSx[3 - count], LOW);
+        digitalWrite(pinsDx[3 - count], LOW);
         delay(this->speed);
     };
 
@@ -107,7 +108,7 @@ void Steppers::turnRight(int degrees){
     lowPins();
 };
 
-void Steppers::addInstruction(StepperInstructions_t instr, int param) {
+void Steppers::addInstruction(StepInstr instr, int param) {
     
     instructions.push_back(instr);
     params.push_back(param);

@@ -15,33 +15,33 @@
 #include <list>
 #include "../MySemaphore/MySemaphore.h"
 
-typedef enum StepperInstructions{
-    GoBackwards,
-    GoForwards,
-    TurnLeft,
-    TurnRight
-}StepperInstructions_t;
+/*typedef enum StepperInstructions{
+    GoForwards = 0,
+    GoBackwards= 1,
+    TurnLeft   = 2,
+    TurnRight  = 3,
+}StepperInstructions_t;*/
 
 class Steppers{
     public:
         Steppers(const int (&leftPins)[4], const int (&rightPins)[4]);
         ~Steppers();
-
         void start(void);
-        void addInstruction(StepperInstructions_t instr, int param);
-        void goForwards (int millimeters);
-        void goBackwards(int millimeters);
-        void turnLeft   (int degrees);
-        void turnRight  (int degrees);
+        enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight};
+        void addInstruction(StepInstr instr, int param);
     private:
         int speed;
-        std::list<StepperInstructions_t> instructions;
+        std::list<StepInstr> instructions;
         std::list<int> params;
         MySemaphore *instrCount;
         
         int pinsSx[4];
         int pinsDx[4];
     
+        void goForwards (int millimeters);
+        void goBackwards(int millimeters);
+        void turnLeft   (int degrees);
+        void turnRight  (int degrees);
         void lowPins(void);
         int mmToSteps(int millimeters);
 };
