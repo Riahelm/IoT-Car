@@ -9,13 +9,22 @@ int rightMotorPins[4] = {MOTORSTEP_DX_1, MOTORSTEP_DX_2, MOTORSTEP_DX_3, MOTORST
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
+  delay(250);
 }
 
 void loop() {
   Steppers motors(leftMotorPins, rightMotorPins);
-  
-  motors.goForwards(500);
-  motors.turnLeft(G45);
-  motors.turnLeft(G45);
-  motors.turnRight(G90 + G15);
+  std::thread obj(&Steppers::start, &motors);
+  motors.addInstruction(Steppers::GoForwards, 500);
+  motors.addInstruction(Steppers::TurnLeft, G45);
+  motors.addInstruction(Steppers::GoBackwards, 500);
+  motors.addInstruction(Steppers::TurnRight, G45);
+  delay(250);
+  for (int i = 0; i < 5; i++)
+  {
+    motors.addInstruction(Steppers::GoForwards, 500);
+    Serial.println("Communicating as it works!");
+    delay(500);
+  }
+  while(true);
 }
