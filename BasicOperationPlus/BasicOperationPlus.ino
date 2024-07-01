@@ -1,5 +1,6 @@
 #include "src/Util/Pins.h"
 #include "src/Steppers/Steppers.h"
+#include <HCSR04.h>
 #include <thread>
 #include <list>
 
