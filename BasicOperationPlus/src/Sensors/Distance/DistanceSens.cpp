@@ -1,40 +1,33 @@
 #include "DistanceSens.h"
 
-DistanceSens::DistanceSens(const int(&leftPins)[2], const int(&centerPins)[2], const int(&rightPins)[2], unsigned long trigTimer)
+DistanceSens::DistanceSens(int trigPin, int sensorCount, uint8_t *sensorPins, unsigned long trigTimer)
 {
-    for (int i = 0; i < 3; i++) {distances = 0};
-    
     this->trigTimer = trigTimer;
-    dsSX = new HCSR04(leftPins[0], leftPins[1]);
-    dsCX = new HCSR04(centerPins[0], centerPins[1]);
-    dsDX = new HCSR04(rightPins[0], rightPins[1]);
-};
+    distances = new double[sensorCount];
+    HCSR04.begin(trigPin, sensorPins, sensorCount);
+}
 
-DistanceSens::~DistanceSens()
-{
-};
+DistanceSens::~DistanceSens() {};
 
 void DistanceSens::start(void)
 {
     while(true){
-        distances[0] = dsSX.measureDistanceCm();
-        distances[1] = dsCX.measureDistanceCm();
-        distances[2] = dsDX.measureDistanceCm();
+        distances = HCSR04.measureDistanceMm();
         delay(trigTimer);
     }
 };
 
-void DistanceSens::setTimer(int trigTimer)
+void DistanceSens::setTimer(unsigned long trigTimer)
 {
     this->trigTimer = trigTimer;
 }
 
-float DistanceSens::getDistanceSX(void){
+double DistanceSens::getDistanceL(void){
     return distances[0];
 };
-float DistanceSens::getDistanceCX(void){
+double DistanceSens::getDistanceC(void){
     return distances[1];
 };
-float DistanceSens::getDistanceDX(void){
+double DistanceSens::getDistanceR(void){
     return distances[2];
 };

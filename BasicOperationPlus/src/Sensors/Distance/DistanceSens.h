@@ -9,20 +9,17 @@
 class DistanceSens{
     public:
         //Trigger, then echo
-        DistanceSens(const int (&leftPins)[2], const int (&centerPins)[2], const int (&rightPins)[2], unsigned long trigTimer);
+        DistanceSens(int trigPin, int sensorCount, uint8_t *sensorPins, unsigned long trigTimer);
         ~DistanceSens();
         void start(void);
-
-        void setTimer(int);
-        float getDistanceSX(void);
-        float getDistanceCX(void);
-        float getDistanceDX(void);
+        
+        void setTimer(unsigned long);
+        double getDistanceL(void);
+        double getDistanceC(void);
+        double getDistanceR(void);
     private:
-        int trigTimer;
-        float distances[3];
-        HCSR04 *dsSX;
-        HCSR04 *dsCX;
-        HCSR04 *dsDX;
+        unsigned long trigTimer;
+        double *distances;
 };
 
 #endif
