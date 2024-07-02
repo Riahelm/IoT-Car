@@ -14,18 +14,16 @@ DistanceSens::~DistanceSens() {}
 void DistanceSens::start(void)
 {
     while(true){
-        double *newDistances = HCSR04.measureDistanceMm();
-        distances.push_front(newDistances);
+        distances.push_front(HCSR04.measureDistanceMm());
         {
             std::unique_lock<std::mutex> lock(mtx);
             for (int i = 0; i < sensorCount; i++)
             {
-                averages[i] += newDistances[i];
-                Serial.println("TMP: " + String(averages[i]));
+                //issue here
+                averages[i] += distances.front()[i];
                 averages[i] -= distances.back()[i];
             }
         }
-
         if(distances.size() > FILTER_SAMPLE_NUM){
             distances.pop_back();
         }
