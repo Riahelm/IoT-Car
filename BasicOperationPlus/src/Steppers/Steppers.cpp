@@ -1,5 +1,6 @@
 #include "Steppers.h"
 #include "Arduino.h"
+
 Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
 
     this->speed  = 2;
@@ -125,5 +126,5 @@ void Steppers::lowPins(void){
 };
 
 int Steppers::mmToSteps(int millimeters) {
-     return (millimeters/MM_PER_STEP); 
+    return (millimeters) / DISTANCE_PER_STEP;
 };

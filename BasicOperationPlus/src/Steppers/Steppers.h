@@ -5,8 +5,11 @@
 
 #define WHEEL_DIAMETER 66.5
 #define CIRCUMFERENCE  208.9159 // (WHEEL_DIAMETER * PI)
+#define DISTANCE_PER_STEP 
 #define STEPS_PER_REVOLUTION 2048
-#define MM_PER_STEP 1.0201 // (CIRCUMFERENCE / STEPS_PER_REVOLUTION)
+#define DISTANCE_PER_STEP 0,10213666782670816684157438377195 //(PI*WHEEL_DIAMETER*FULL_STEP_ANGLE) / 360
+#define PI 3.1415926535897932384626433832795
+#define FULL_STEP_ANGLE 0.176
 #define G15 360
 #define G30 720
 #define G45 1080
@@ -14,14 +17,6 @@
 
 #include <list>
 #include "../MySemaphore/MySemaphore.h"
-
-/*typedef enum StepperInstructions{
-    GoForwards = 0,
-    GoBackwards= 1,
-    TurnLeft   = 2,
-    TurnRight  = 3,
-}StepperInstructions_t;*/
-
 class Steppers{
     public:
         Steppers(const int (&leftPins)[4], const int (&rightPins)[4]);
