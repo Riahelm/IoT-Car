@@ -6,7 +6,7 @@
 #include <mutex>
 #include <list>
 #include <HCSR04.h>
-#define FILTER_SAMPLE_NUM 5 //Number of samples to be used in the moving average filter
+#define FILTER_SAMPLE_NUM 10 //Number of samples to be used in the moving average filter
 class DistanceSens{
     public:
         //Trigger, then echo
