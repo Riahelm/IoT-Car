@@ -2,7 +2,6 @@
 #include "src/Util/Pins.h"
 #include "src/Steppers/Steppers.h"
 #include "src/Sensors/Distance/DistanceSens.h"
-#include <HCSR04.h>
 #include <thread>
 #include <list>
 
@@ -11,8 +10,7 @@ int rightMotorPins[4]   = {MOTORSTEP_R_1, MOTORSTEP_R_2, MOTORSTEP_R_3, MOTORSTE
 int triggerPin          = DIST_TRIG;
 uint8_t sensorPins[3] = {DIST_L_ECHO, DIST_C_ECHO, DIST_R_ECHO};
 
-Steppers motors(leftMotorPins, rightMotorPins);
-DistanceSens sensors(triggerPin, 3, sensorPins, 20);
+
 
 void setup() {
   Serial.begin(115200);
@@ -20,15 +18,14 @@ void setup() {
 }
 
 void loop() {
-  //std::thread motorT(&Steppers::start, &motors);
-  std::thread sensorT(&DistanceSens::start, &sensors);
-  //delay(250); 
-  //motors.addInstruction(Steppers::GoForwards, 500);
-  while(true){
-    Serial.println("Left: " + String(sensors.getDistanceL()));
-    Serial.println("Central: " + String(sensors.getDistanceC()));
-    Serial.println("Right: " + String(sensors.getDistanceR()));
-    delay(500);
-  }
+  Steppers motors(leftMotorPins, rightMotorPins);
+  DistanceSens sensors(triggerPin, 3, sensorPins, 20);
+  std::thread motorT(&Steppers::start, &motors);
+  //std::thread sensorT(&DistanceSens::start, &sensors);
+  delay(250); 
+  
+  
+  motors.addInstruction(Steppers::TurnLeft, G90 * 2);
+  motors.addInstruction(Steppers::TurnRight, G90 * 2);
   while(true);
 }
