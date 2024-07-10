@@ -24,6 +24,14 @@ void loop() {
   std::thread sensorT(&DistanceSens::start, &sensors);
   delay(250); 
   
-  motors.goForwards(2000);
+  motors.goForwards(100);
+  motors.turnLeft(90);
+  motors.goBackwards(50);
+  motors.turnRight(180);
+  motors.goBackwards(100);
+  motors.turnLeft(180);
+  motors.goBackwards(50);
+  motors.turnRight(90);
+  motors.goBackwards(100);
   while(true);
 }

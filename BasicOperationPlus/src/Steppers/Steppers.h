@@ -6,9 +6,9 @@
 #define WHEEL_DIAMETER 66.5
 #define CIRCUMFERENCE  208.9159 // (WHEEL_DIAMETER * PI) 
 #define STEPS_PER_REVOLUTION 2048
-#define STEP_PER_DISTANCE 9.802 //In steps
+#define STEP_PER_DISTANCE 10 //Effectively 9.802 //In steps
+#define STEPS_PER_DEGREE 5.7
 #define PI 3.1415926535897932384626433832795
-#define FULL_STEP_ANGLE 0.176
 #define G15 360
 #define G30 720
 #define G45 1080
@@ -42,6 +42,7 @@ class Steppers{
         void _turnRight  (int degrees);
         void _lowPins(void);
         int _mmToSteps(int millimeters);
+        int _degreesToSteps(int degrees);
 };
 
 #endif
