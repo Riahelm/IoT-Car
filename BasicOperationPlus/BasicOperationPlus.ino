@@ -21,11 +21,9 @@ void loop() {
   Steppers motors(leftMotorPins, rightMotorPins);
   DistanceSens sensors(triggerPin, 3, sensorPins, 20);
   std::thread motorT(&Steppers::start, &motors);
-  //std::thread sensorT(&DistanceSens::start, &sensors);
+  std::thread sensorT(&DistanceSens::start, &sensors);
   delay(250); 
   
-  
-  motors.addInstruction(Steppers::TurnLeft, G90 * 2);
-  motors.addInstruction(Steppers::TurnRight, G90 * 2);
+  motors.goForwards(2000);
   while(true);
 }
