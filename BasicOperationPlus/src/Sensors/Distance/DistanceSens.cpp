@@ -1,7 +1,7 @@
 #include "DistanceSens.h"
 
 /* Class constructor */
-DistanceSens::DistanceSens(int trigPin, int sensorCount, uint8_t *sensorPins, unsigned long trigTimer)
+DistanceSens::DistanceSens(uint8_t trigPin, uint8_t sensorCount, uint8_t *sensorPins, uint16_t trigTimer)
 {
     this->trigTimer = trigTimer;
     this->sensorCount = sensorCount;
@@ -43,7 +43,7 @@ void DistanceSens::start(void)
 };
 
 /* Function to set a new timer */
-void DistanceSens::setTimer(unsigned long trigTimer)
+void DistanceSens::setTimer(uint16_t trigTimer)
 {
     this->trigTimer = trigTimer;
 }

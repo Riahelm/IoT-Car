@@ -24,7 +24,7 @@
 class Steppers{
     public:
         /* Class constructor, requires the pins of each motor */
-        Steppers(const int (&leftPins)[4], const int (&rightPins)[4]);
+        Steppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]);
 
         /* Class destructor */
         ~Steppers();
@@ -41,8 +41,8 @@ class Steppers{
         std::list<int> _params;             /* List of parameters to use                                            */
         MySemaphore *_instrCount;           /* Number of instructions available, if it is at 0 it blocks the thread */
         
-        int _pinsSx[4]; /* Left motor pins  */
-        int _pinsDx[4]; /* Right motor pins */
+        uint8_t _pinsSx[4]; /* Left motor pins  */
+        uint8_t _pinsDx[4]; /* Right motor pins */
 
         /* Function to add an instruction to the tasks to perform, requires the task and the parameter for it */
         void _addInstruction(StepInstr instr, int param);
