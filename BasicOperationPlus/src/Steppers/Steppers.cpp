@@ -93,7 +93,7 @@ void Steppers::_goBackwards(int millimeters){
 
 void Steppers::_turnLeft(int degrees){
     int count;
-    for (int i = 0; i < _degreesToSteps(degrees)*2; i++){
+    for (int i = 0; i < _degreesToSteps(degrees)/2; i++){
         count = i % 4;
         digitalWrite(_pinsSx[3 - count], HIGH);
         digitalWrite(_pinsDx[count], HIGH);
@@ -107,7 +107,7 @@ void Steppers::_turnLeft(int degrees){
 };
 void Steppers::_turnRight(int degrees){
     int count;
-    for (int i = 0; i < _degreesToSteps(degrees)*2; i++){
+    for (int i = 0; i < _degreesToSteps(degrees)/2; i++){
         count = i % 4;
         digitalWrite(_pinsSx[count], HIGH);
         digitalWrite(_pinsDx[3 - count], HIGH);
@@ -140,5 +140,5 @@ int Steppers::_mmToSteps(int millimeters) {
 };
 
 int Steppers::_degreesToSteps(int degrees){
-    return degrees * STEP_REV_IN_DG;
+    return degrees * G1;
 }

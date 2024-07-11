@@ -9,6 +9,9 @@
 #define STEP_PER_DISTANCE 10 //Effectively 9.802 //In steps
 #define STEPS_PER_DEGREE 5.7
 #define PI 3.1415926535897932384626433832795
+#define G1  24
+#define G5  120
+#define G10 240
 #define G15 360
 #define G30 720
 #define G45 1080
