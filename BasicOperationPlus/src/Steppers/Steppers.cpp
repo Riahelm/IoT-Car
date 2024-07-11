@@ -2,7 +2,7 @@
 #include "Arduino.h"
 
 /* Class constructor */
-Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
+Steppers::Steppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]){
 
     this->_speed  = 2;  /* Default speed is 2, which is the minimum for a BYJ stepper                           */
     _instrCount   = new MySemaphore(0); /* Starting amount of instructions is zero                              */
