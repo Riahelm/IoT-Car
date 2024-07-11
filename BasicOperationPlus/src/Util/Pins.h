@@ -4,20 +4,20 @@
     /* UTILIZED PINS */
     #define LED_PIN 4
 
-    #define MOTORSTEP_SX_1 26
-    #define MOTORSTEP_SX_2 25
-    #define MOTORSTEP_SX_3 33
-    #define MOTORSTEP_SX_4 32
+    #define MOTORSTEP_L_1 26
+    #define MOTORSTEP_L_2 25
+    #define MOTORSTEP_L_3 33
+    #define MOTORSTEP_L_4 32
 
-    #define MOTORSTEP_DX_1 13
-    #define MOTORSTEP_DX_2 12
-    #define MOTORSTEP_DX_3 14
-    #define MOTORSTEP_DX_4 27
+    #define MOTORSTEP_R_1 13
+    #define MOTORSTEP_R_2 12
+    #define MOTORSTEP_R_3 14
+    #define MOTORSTEP_R_4 27
  
     // HC-SR04 
     #define DIST_TRIG 15
-    #define DIST_SX_ECHO 19
-    #define DIST_CE_ECHO 18
-    #define DIST_DX_ECHO 5
+    #define DIST_L_ECHO 5
+    #define DIST_C_ECHO 19
+    #define DIST_R_ECHO 18
 
 #endif
