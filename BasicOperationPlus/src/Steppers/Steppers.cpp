@@ -1,12 +1,13 @@
-#include "Steppers.h"
+#include "Steppers.h" 
 #include "Arduino.h"
 
+/* Class constructor */
 Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
 
-    this->_speed  = 2;
-    _instrCount   = new MySemaphore(0);
+    this->_speed  = 2;  /* Default speed is 2, which is the minimum for a BYJ stepper                           */
+    _instrCount   = new MySemaphore(0); /* Starting amount of instructions is zero                              */
     
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) /* Assign all the pins to the respective variables and puts them in output mode */
     {
         _pinsSx[i] = leftPins[i];
         _pinsDx[i] = rightPins[i];
@@ -18,8 +19,10 @@ Steppers::Steppers(const int (&leftPins)[4], const int (&rightPins)[4]){
     
 };
 
+/* Class destructor */
 Steppers::~Steppers(){};
 
+/* Function to start reading and executing commands in the instruction list. Best used as a thread.*/
 void Steppers::start(){
     while(true){
         
@@ -46,23 +49,30 @@ void Steppers::start(){
     }
 }
 
+/* Function callable by another thread, adds an instruction */
 void Steppers::goForwards(int millimeters) {
     this->_addInstruction(Steppers::GoForwards, millimeters);
 };
+
+/* Function callable by another thread, adds an instruction */
 void Steppers::goBackwards(int millimeters) {
     this->_addInstruction(Steppers::GoBackwards, millimeters);
 };
+
+/* Function callable by another thread, adds an instruction */
 void Steppers::turnLeft(int degrees) {
     this->_addInstruction(Steppers::TurnLeft, degrees);
 };
+
+/* Function callable by another thread, adds an instruction */
 void Steppers::turnRight(int degrees) {
     this->_addInstruction(Steppers::TurnRight, degrees);
 };
 
+/* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_goForwards(int millimeters){
     int count;
-    Serial.println(String(millimeters)); 
-    Serial.println(String(_mmToSteps(millimeters))); 
+    
     for (int i = 0; i < _mmToSteps(millimeters); i++){
         count = i % 4;
         digitalWrite(_pinsSx[count], HIGH);
@@ -76,6 +86,7 @@ void Steppers::_goForwards(int millimeters){
     _lowPins();
 };
 
+/* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_goBackwards(int millimeters){
     int count;
     for (int i = 0; i < _mmToSteps(millimeters); i++){
@@ -91,6 +102,7 @@ void Steppers::_goBackwards(int millimeters){
     _lowPins();
 };
 
+/* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_turnLeft(int degrees){
     int count;
     for (int i = 0; i < _degreesToSteps(degrees)/2; i++){
@@ -105,6 +117,8 @@ void Steppers::_turnLeft(int degrees){
 
     _lowPins();
 };
+
+/* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_turnRight(int degrees){
     int count;
     for (int i = 0; i < _degreesToSteps(degrees)/2; i++){
@@ -120,14 +134,14 @@ void Steppers::_turnRight(int degrees){
     _lowPins();
 };
 
+/* Wrapper function to ease adding instructions */
 void Steppers::_addInstruction(StepInstr instr, int param) {
     _instructions.push_back(instr);
     _params.push_back(param);
     _instrCount->release();
 };
 
-
-
+/* Utility function to lower all pins */
 void Steppers::_lowPins(void){
     for (int i = 0; i < 4; i++){
         digitalWrite(_pinsSx[i], LOW);
@@ -135,10 +149,12 @@ void Steppers::_lowPins(void){
     };
 };
 
+/* Utility function to turn millimeters into steps */
 int Steppers::_mmToSteps(int millimeters) {
     return (millimeters * STEP_PER_DISTANCE);
 };
 
+/* Utility function to turn degrees into steps */
 int Steppers::_degreesToSteps(int degrees){
     return degrees * G1;
 }
