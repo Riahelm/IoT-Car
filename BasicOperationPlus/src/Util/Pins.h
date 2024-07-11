@@ -2,6 +2,7 @@
 #define PINS_H
     
     /* UTILIZED PINS */
+    #define LED_BUILTIN 2
     #define LED_PIN 4
 
     #define MOTORSTEP_L_1 26
