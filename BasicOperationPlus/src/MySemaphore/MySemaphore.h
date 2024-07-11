@@ -11,8 +11,8 @@
    on how the release and acquire functions are used */
 class MySemaphore{
     public:
-        MySemaphore(int count);     /* Semaphore constructor                                */
-        ~MySemaphore();             /* Semaphore destructor                                 */
+        MySemaphore(int count);     /* Class constructor, requires a number of permits      */
+        ~MySemaphore();             /* Class destructor                                     */
         void release();             /* Function to release permits                          */
         void acquire();             /* Function to acquire permits, waits if count is == 0  */
     private:
