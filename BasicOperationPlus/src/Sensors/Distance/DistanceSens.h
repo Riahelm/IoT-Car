@@ -32,9 +32,9 @@ class DistanceSens{
         double getDistanceC(void); /* Gets second result, that is the sensor on the center side of the car  */
         double getDistanceR(void); /* Gets third result, that is the sensor on the right side of the car    */
     private:
-        uint8_t sensorCount;                /* Amount of sensors being used at once */
+        uint8_t sensorCount;            /* Amount of sensors being used at once                             */
         std::mutex mtx;                 /* Synchronization variable                                         */
-        uint16_t trigTimer;        /* Time between the executions of the "start" function              */
+        uint16_t trigTimer;             /* Time between the executions of the "start" function              */
         std::list<double *> distances;  /* List holding the results of the readings,                        */
                                         /* where a reading is made up of the distances read by each sensor  */
         double *averages;               /* Average between the previous FILTER_SAMPLE_NUM readings          */
