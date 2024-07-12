@@ -2,7 +2,7 @@
 #include "src/Util/Pins.h"
 #include "src/Steppers/Steppers.h"
 #include "src/Sensors/Distance/DistanceSens.h"
-#include "src/WiFi/WiFi.h"
+#include "src/MyWiFi/MyWiFi.h"
 #include <thread>
 
 /* Store all pins in the respective structures */
@@ -17,25 +17,31 @@ DistanceSens *sensors;
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  motors  = new Steppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
-  sensors = new DistanceSens(triggerPin, 3, sensorPins, 20);  /* Create sensor  object */
-  std::thread motorT(&Steppers::start, motors);               /* Create stepper thread */
-  std::thread sensorT(&DistanceSens::start, sensors);         /* Create sensor  thread */
-  motorT.detach();                                            /* Allows for thread to run independently from setup() */
-  sensorT.detach();                                           /* Allows for thread to run independently from setup() */
-  delay(2500);                                                /* Wait for the sensors to stabilize */
+  initWiFi();
 
-  
+  delay(2500);                                                /* Wait for the sensors to stabilize */
 }
 
+void setupMotors(){
+  motors  = new Steppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
+  std::thread motorT(&Steppers::start, motors);               /* Create stepper thread */
+  motorT.detach();                                            /* Allows for thread to run independently from setup() */
+}
+
+void setupSensors(){
+  sensors = new DistanceSens(triggerPin, 3, sensorPins, 20);  /* Create sensor  object */
+  std::thread sensorT(&DistanceSens::start, sensors);         /* Create sensor  thread */
+  sensorT.detach();                                           /* Allows for thread to run independently from setup() */
+}
 
 void loop() {
 
-  motors->goForwards(100);
+  /*motors->goForwards(100);
   motors->turnLeft(360);
   motors->goForwards(100);
   motors->turnRight(360);
-  motors->goBackwards(200);
+  motors->goBackwards(200);*/
 
+  printValues();
   while(true);
 }
