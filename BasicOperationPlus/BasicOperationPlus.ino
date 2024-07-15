@@ -3,6 +3,7 @@
 #include "src/Steppers/Steppers.h"
 #include "src/Sensors/Distance/DistanceSens.h"
 #include "src/MyWiFi/MyWiFi.h"
+#include "src/MyTelnet/MyTelnet.h"
 #include <thread>
 
 /* Store all pins in the respective structures */
@@ -11,15 +12,22 @@ uint8_t rightMotorPins[4]   = {MOTORSTEP_R_1, MOTORSTEP_R_2, MOTORSTEP_R_3, MOTO
 uint8_t triggerPin          = DIST_TRIG;
 uint8_t sensorPins[3] = {DIST_L_ECHO, DIST_C_ECHO, DIST_R_ECHO};
 
+MyTelnet *myTelnet;
 Steppers *motors;
 DistanceSens *sensors;
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  initWiFi();
-
+  setupWiFi();
+  startCommunication();
   delay(2500);                                                /* Wait for the sensors to stabilize */
+}
+
+void startCommunication(){
+  myTelnet = new MyTelnet();
+  std::thread telnetT(&MyTelnet::startTelnet, myTelnet);
+  telnetT.detach();
 }
 
 void setupMotors(){
@@ -36,12 +44,4 @@ void setupSensors(){
 
 void loop() {
 
-  /*motors->goForwards(100);
-  motors->turnLeft(360);
-  motors->goForwards(100);
-  motors->turnRight(360);
-  motors->goBackwards(200);*/
-
-  printValues();
-  while(true);
 }
