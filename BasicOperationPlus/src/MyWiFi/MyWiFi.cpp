@@ -1,6 +1,6 @@
 #include "MyWiFi.h"
 
-void initWiFi(void){
+void setupWiFi(void){
     LEDBuiltIn led(250);
     std::thread builtIn(&LEDBuiltIn::startBlink, &led);
 
@@ -10,20 +10,32 @@ void initWiFi(void){
 
     Serial.print("ESP Board MAC Address:  ");
     Serial.println(WiFi.macAddress());
-    Serial.print("ESP Board name:  " + String(WiFi.getHostname()));
+    Serial.println("ESP Board name:  " + String(WiFi.getHostname()));
+    
 
     uint8_t i = 0;
     while((WiFi.status() != WL_CONNECTED) && i < 10){
-        Serial.println("Connecting...");
-        Serial.println();
-        delay(2000);
+        delay(500);
+        Serial.print(".");
         i++;
-    };
+    }
 
+    if(i >= 10){
+        Serial.println("Connection timed out");
+    }else{
+        Serial.println("Connection successful");
+        Serial.println("ESP IP: " + String(WiFi.localIP()));
+    }
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
 
+    led.stopBlink();
+    builtIn.join();
+}
 
+bool isConnected(void)
+{
+    return (WiFi.status() == WL_CONNECTED);
 }
 
 void printValues(void){
@@ -31,3 +43,5 @@ void printValues(void){
     while(i < 10);
         Serial.println("Signal strength: " + String(WiFi.RSSI()));
 }
+
+
