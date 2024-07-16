@@ -1,10 +1,10 @@
 #include "Arduino.h"
-#include "src/Util/Pins.h"
-#include "src/Steppers/Steppers.h"
-#include "src/Sensors/Distance/DistanceSens.h"
-#include "src/MyWiFi/MyWiFi.h"
-#include "src/MyTelnet/MyTelnet.h"
 #include <thread>
+#include "src/Util/Pins.h"
+#include "src/Actuators/Steppers/Steppers.h"
+#include "src/Sensors/Distance/DistanceSens.h"
+#include "src/Communication/MyWiFi/MyWiFi.h"
+#include "src/Communication/MyTelnet/MyTelnet.h"
 
 /* Store all pins in the respective structures */
 uint8_t leftMotorPins[4]    = {MOTORSTEP_L_1, MOTORSTEP_L_2, MOTORSTEP_L_3, MOTORSTEP_L_4};

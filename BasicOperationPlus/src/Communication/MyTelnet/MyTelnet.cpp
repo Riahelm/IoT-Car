@@ -49,8 +49,8 @@ static void onTelnetInput(String str) {
     } else if (str == "bye") {
         telnet.println("> disconnecting you...");
         telnet.disconnectClient();
-    } else if (str == Forward){
-        
+    } else if (valid(str)){
+        telnet.println("I read this line: " + str);
     }
 }
 

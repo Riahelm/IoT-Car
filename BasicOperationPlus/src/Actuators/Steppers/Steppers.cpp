@@ -1,5 +1,4 @@
 #include "Steppers.h" 
-#include "Arduino.h"
 
 /* Class constructor */
 Steppers::Steppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]){

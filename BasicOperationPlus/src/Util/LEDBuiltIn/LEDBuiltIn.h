@@ -1,6 +1,6 @@
 #include "Arduino.h"
-#include "../Util/Pins.h"
 #include <thread>
+#include "../Pins.h"
 class LEDBuiltIn{
     public:
         LEDBuiltIn(uint16_t speed);

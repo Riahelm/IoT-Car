@@ -2,9 +2,9 @@
 #ifndef DISTANCE_SENS_H
 #define DISTANCE_SENS_H
 
-#include "../../Util/Pins.h"    /* To determine the pins to be used                   */
 #include <mutex>                /* Synchronization library                            */
 #include <list>                 /* Utility library                                    */
+#include "../../Util/Pins.h"    /* To determine the pins to be used                   */
 #include <HCSR04.h>             /* Used to read from HCSR04 sensors                   */
 #define FILTER_SAMPLE_NUM 10    /* Represents the order of the moving average filter, */
                                 /* a higher number means a more stable output         */

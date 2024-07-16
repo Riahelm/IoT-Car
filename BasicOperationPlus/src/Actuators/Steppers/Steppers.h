@@ -17,8 +17,10 @@
 #define G45 1080    /* Number of steps to take to turn 45 degrees                           */
 //#define G90 2160    /* Number of steps to take to turn 90 degrees                           */
 #define G90 2180 /* Experimental value */
+
+#include "Arduino.h"
 #include <list> /* Utility library */
-#include "../MySemaphore/MySemaphore.h" /* Synchronization library */
+#include "../../Util/MySemaphore/MySemaphore.h" /* Synchronization library */
 
 /* Class that implements a threadable system with two stepper motors that allow for simple movement */
 class Steppers{
