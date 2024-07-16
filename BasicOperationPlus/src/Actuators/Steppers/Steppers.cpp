@@ -156,5 +156,8 @@ int Steppers::_mmToSteps(int millimeters) {
 
 /* Utility function to turn degrees into steps */
 int Steppers::_degreesToSteps(int degrees){
+    if(degrees == 90){
+        return G90;
+    } 
     return degrees * G1;
 }

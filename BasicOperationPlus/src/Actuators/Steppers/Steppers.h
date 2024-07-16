@@ -15,8 +15,8 @@
 #define G15 360     /* Number of steps to take to turn 15 degree                            */
 #define G30 720     /* Number of steps to take to turn 30 degrees                           */
 #define G45 1080    /* Number of steps to take to turn 45 degrees                           */
-#define G90 2160    /* Number of steps to take to turn 90 degrees                           */
-
+//#define G90 2160    /* Number of steps to take to turn 90 degrees                           */
+#define G90 2180 /* Experimental value */
 #include <list> /* Utility library */
 #include "../MySemaphore/MySemaphore.h" /* Synchronization library */
 
