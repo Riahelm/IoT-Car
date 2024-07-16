@@ -51,6 +51,7 @@ static void onTelnetInput(String str) {
         telnet.disconnectClient();
     } else if (valid(str)){
         telnet.println("I read this line: " + str);
+        telStep->goForwards(200);
     }
 }
 
