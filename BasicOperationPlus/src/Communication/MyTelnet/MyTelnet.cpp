@@ -1,44 +1,59 @@
 #include "MyTelnet.h"
 
-void MyTelnet::onTelnetConnect(String ip){
+static ESPTelnet telnet;
+static Steppers *telStep;
+static DistanceSens *telSens;
+
+static void onTelnetConnect(String ip){
     Serial.print("- Telnet: ");
     Serial.print(ip);
     Serial.println(" connected");
     telnet.println("\nWelcome " + telnet.getIP());
-    telnet.println("(Use ^] + q  to disconnect.)");
+    telnet.print("> ");
 }
 
-void MyTelnet::onTelnetDisconnect(String ip) {
+static void onTelnetDisconnect(String ip) {
     Serial.print("- Telnet: ");
     Serial.print(ip);
     Serial.println(" disconnected");
 }
 
-void MyTelnet::onTelnetReconnect(String ip) {
+static void onTelnetReconnect(String ip) {
     Serial.print("- Telnet: ");
     Serial.print(ip);
     Serial.println(" reconnected");
 }
 
-void MyTelnet::onTelnetConnectionAttempt(String ip) {
+static void onTelnetConnectionAttempt(String ip) {
     Serial.print("- Telnet: ");
     Serial.print(ip);
     Serial.println(" tried to connect");
 }
 
-void MyTelnet::onTelnetInput(String str) {
-// checks for a certain command
+static void onTelnetInput(String str) {
+    /*if(valid(str)){               //PSEUDO CODE
+        extractInstruction(str);
+        extractParameter(str);
+        executeFunc(instr, param);
+    }else{
+        telnet.println("Spelling error. Please check input.");
+    }*/
+ //checks for a certain command
     if (str == "ping") {
         telnet.println("> pong"); 
         Serial.println("- Telnet: pong");
+        telnet.print("> ");
+        telnet.println(String(telSens->getDistanceC()));
+        telnet.print("> ");
     // disconnect the client
     } else if (str == "bye") {
         telnet.println("> disconnecting you...");
         telnet.disconnectClient();
-    }
+    } else if (str == Forward)
 }
 
-void MyTelnet::MyTelnet(void){   
+void initTelnet(void){   
+
     telnet.onConnect(onTelnetConnect);
     telnet.onConnectionAttempt(onTelnetConnectionAttempt);
     telnet.onReconnect(onTelnetReconnect);
@@ -54,9 +69,20 @@ void MyTelnet::MyTelnet(void){
     }
 }
 
-void MyTelnet::startTelnet(void)
+void startTelnet(void)
 {
     while(true){
         telnet.loop();
+        delay(THREAD_POLLING_INTERVAL);
     }
+}
+
+void setMotors(Steppers *steppers)
+{
+    telStep = steppers;
+}
+
+void setSensors(DistanceSens *sensors)
+{
+    telSens = sensors;
 }
