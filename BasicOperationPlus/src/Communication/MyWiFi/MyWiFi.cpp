@@ -23,8 +23,10 @@ void setupWiFi(void){
     if(i >= 10){
         Serial.println("Connection timed out");
     }else{
+        IPAddress ip = WiFi.localIP();
         Serial.println("Connection successful");
-        Serial.println("ESP IP: " + String(WiFi.localIP()));
+        Serial.print("ESP IP: ");
+        Serial.println(WiFi.localIP().toString());
     }
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
