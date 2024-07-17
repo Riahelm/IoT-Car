@@ -48,6 +48,26 @@ void Steppers::start(){
     }
 }
 
+Steppers::StepInstr Steppers::uintToStepInstr(uint8_t num)
+{   
+    StepInstr res;
+    switch(num){
+        case 0:
+            res = GoForwards;
+            break;
+        case 1:
+            res = GoBackwards;
+            break;
+        case 2:
+            res = TurnLeft;
+            break;
+        case 3:
+            res = TurnRight;
+            break;
+    }
+    return res;
+}
+
 /* Function callable by another thread, adds an instruction */
 void Steppers::goForwards(int millimeters) {
     this->_addInstruction(Steppers::GoForwards, millimeters);

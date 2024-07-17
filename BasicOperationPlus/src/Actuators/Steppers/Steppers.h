@@ -33,6 +33,8 @@ class Steppers{
 
         void start(void); /* Function starts the connection to the motors. Best utilized as a thread                */
         enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight}; /* Used to distinguish the instructions      */
+        StepInstr uintToStepInstr(uint8_t num); /* Function to convert an integer into a stepper instruction,       */
+                                                /* returns NULL if value is not assignable                          */
         void goForwards (int millimeters); /* Function to move both motors forwards                                 */
         void goBackwards(int millimeters); /* Function to move both motors backwards                                */
         void turnLeft   (int degrees);     /* Function to turn to the left                                          */
