@@ -2,6 +2,8 @@
 #define STRING_PARSER_H
 
 #include "Arduino.h"
-bool valid(String str);
+#include <tuple>
+
+std::tuple<uint8_t *, uint32_t *> extractFunc(String str);
 
 #endif

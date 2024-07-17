@@ -31,15 +31,17 @@ static void onTelnetConnectionAttempt(String ip) {
 }
 
 static void onTelnetInput(String str) {
-    /*if(valid(str)){               //PSEUDO CODE
-        extractInstruction(str);
-        extractParameter(str);
-        executeFunc(instr, param);
-    }else{
-        telnet.println("Spelling error. Please check input.");
-    }*/
+    std::tuple <uint8_t *, uint32_t *> myFunc = extractFunc(str);
+
+    if(std::get<0>(myFunc) == nullptr){
+        telnet.println("Instruction unavailable, new input requested.");
+    } else if(std::get<1>(myFunc) == nullptr    ){
+        telnet.println("Parameter error, new input requested.");
+    } else{
+        //executeFunc(Steppers::uintToStepInstr(*get<0>(myFunc)), param);
+    }
  //checks for a certain command
-    if (str == "ping") {
+    /*if (str == "ping") {
         telnet.println("> pong"); 
         Serial.println("- Telnet: pong");
         telnet.print("> ");
@@ -52,7 +54,7 @@ static void onTelnetInput(String str) {
     } else if (valid(str)){
         telnet.println("I read this line: " + str);
         telStep->goForwards(200);
-    }
+    }*/
 }
 
 void initTelnet(void){   

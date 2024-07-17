@@ -1,6 +1,7 @@
 #ifndef MYTELNET_H
 #define MYTELNET_H
 
+#include <tuple>
 #include <ESPTelnet.h>
 #include "../MyWiFi/MyWiFi.h"
 #include "../../Actuators/Steppers/Steppers.h"
