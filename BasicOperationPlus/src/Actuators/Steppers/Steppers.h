@@ -33,37 +33,37 @@ class Steppers{
 
         void start(void); /* Function starts the connection to the motors. Best utilized as a thread                */
         enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight}; /* Used to distinguish the instructions      */
-        StepInstr uintToStepInstr(uint8_t num); /* Function to convert an integer into a stepper instruction,       */
+        static StepInstr *uintToStepInstr(uint8_t num);/* Function to convert an integer into a stepper instruction, */
                                                 /* returns NULL if value is not assignable                          */
-        void goForwards (int millimeters); /* Function to move both motors forwards                                 */
-        void goBackwards(int millimeters); /* Function to move both motors backwards                                */
-        void turnLeft   (int degrees);     /* Function to turn to the left                                          */
-        void turnRight  (int degrees);     /* Function to turn to the right                                         */ 
+        void goForwards (uint16_t millimeters); /* Function to move both motors forwards                                 */
+        void goBackwards(uint16_t millimeters); /* Function to move both motors backwards                                */
+        void turnLeft   (uint16_t degrees);     /* Function to turn to the left                                          */
+        void turnRight  (uint16_t degrees);     /* Function to turn to the right                                         */ 
+        /* Function to add an instruction to the tasks to perform, requires the task and the parameter for it */
+        void addInstruction(StepInstr instr, uint16_t param);
     private:
-        int _speed; /* Time to take between steps of the motor                                                      */
+        uint8_t _speed; /* Time to take between steps of the motor                                                      */
         std::list<StepInstr> _instructions; /* List of instructions to perform                                      */
-        std::list<int> _params;             /* List of parameters to use                                            */
+        std::list<uint16_t> _params;             /* List of parameters to use                                            */
         MySemaphore *_instrCount;           /* Number of instructions available, if it is at 0 it blocks the thread */
         
         uint8_t _pinsSx[4]; /* Left motor pins  */
         uint8_t _pinsDx[4]; /* Right motor pins */
 
-        /* Function to add an instruction to the tasks to perform, requires the task and the parameter for it */
-        void _addInstruction(StepInstr instr, int param);
         /* Function to move forwards, acts directly on the motors, requires the amount of millimeters to move */
-        void _goForwards (int millimeters);
+        void _goForwards (uint16_t millimeters);
         /* Function to move backwards, acts directly on the motors, requires the amount of millimeters to move */
-        void _goBackwards(int millimeters);
+        void _goBackwards(uint16_t millimeters);
         /* Function to turn left, acts directly on the motors, requires the amount of degrees to turn */
-        void _turnLeft   (int degrees);
+        void _turnLeft   (uint16_t degrees);
         /* Function to turn right, acts directly on the motors, requires the amount of degrees to turn */
-        void _turnRight  (int degrees);
+        void _turnRight  (uint16_t degrees);
         /* Function to lower all pin output */
         void _lowPins(void);
         /* Function to turn millimeters into steps */
-        int _mmToSteps(int millimeters);
+        uint16_t _mmToSteps(uint16_t millimeters);
         /* Function to turn degrees into steps */
-        int _degreesToSteps(int degrees);
+        uint16_t _degreesToSteps(uint16_t degrees);
 };
 
 #endif
