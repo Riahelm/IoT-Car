@@ -4,6 +4,6 @@
 #include "Arduino.h"
 #include <tuple>
 
-std::tuple<uint8_t *, uint32_t *> extractFunc(String str);
+std::tuple<String, String> splitFunc(String str);
 
 #endif
