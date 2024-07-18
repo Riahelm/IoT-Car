@@ -1,8 +1,87 @@
+
 #include "MyTelnet.h"
 
 static ESPTelnet telnet;
 static Steppers *telStep;
 static DistanceSens *telSens;
+
+void parseGoForward(String param){
+    long normalParam = param.toInt(); 
+    if(0 <= normalParam <= 4000){
+        telStep->goForwards(normalParam);
+    }else{
+        telnet.println("Parameter error. Parameter must be a natural number lower than 4000.");
+    }
+};
+
+void parseGoBackward(String param){
+    long normalParam = param.toInt(); 
+    if(0 <= normalParam <= 4000){
+        telStep->goBackwards(normalParam);
+    }else{
+        telnet.println("Parameter error. Parameter must be a natural number lower than 4000.");
+    }
+}
+void parseTurnLeft(String param){
+    long normalParam = param.toInt(); 
+    if(0 < normalParam / 360 < 1){
+        telStep->turnLeft(normalParam);
+    }else{
+        telnet.println("Parameter error. Parameter must be a natural number between 0 and 360.");
+    }
+}
+void parseTurnRight(String param){
+    long normalParam = param.toInt(); 
+    if(0 < normalParam / 360 < 1){
+        telStep->turnRight(normalParam);
+    }else{
+        telnet.println("Parameter error. Parameter must be a natural number between 0 and 360.");
+    }
+}
+void parsePingLeft(String param){
+    if(param.length() == 0){
+        telnet.println(telSens->getDistanceL());
+    }
+}
+void parsePingCenter(String param){
+    if(param.length() == 0){
+        telnet.println(telSens->getDistanceC());
+    }
+}
+void parsePingRight(String param){
+    if(param.length() == 0){
+        telnet.println(telSens->getDistanceR());
+    }
+}
+
+void parseGoTo(String param){
+    //TBD 
+}
+
+void printError(String instr){
+    telnet.print("Input function was: " + instr + ", please give another input.");
+};
+
+typedef void (*func_to_call)(String param);
+
+typedef struct myFunc{
+    String name;
+    func_to_call fun;
+} myFunc_t;
+
+myFunc_t functions[NUM_OF_COMMANDS] = {
+    {"goforward",   parseGoForward},
+    {"goforwards",  parseGoForward},
+    {"gobackward",  parseGoBackward},
+    {"gobackwards", parseGoBackward},
+    {"turnleft",    parseTurnLeft},
+    {"turnright",   parseTurnRight},
+    {"pingleft",    parsePingLeft},
+    {"pingcenter",  parsePingCenter},
+    {"pingright",   parsePingRight},
+    {"goto",        parseGoTo},
+    {"error",       printError},
+};
 
 static void onTelnetConnect(String ip){
     Serial.print("- Telnet: ");
@@ -30,31 +109,26 @@ static void onTelnetConnectionAttempt(String ip) {
     Serial.println(" tried to connect");
 }
 
-static void onTelnetInput(String str) {
-    std::tuple <uint8_t *, uint32_t *> myFunc = extractFunc(str);
+void onTelnetInput(String str){
+    str.trim();
+    str.toLowerCase();
+    Serial.println(str);
+    std::tuple<String, String> funPar = splitFunc(str);
+    int i = 0;
+    std::get<1>(funPar).trim();
+    telnet.println("Fun name: " + String(std::get<0>(funPar)));
+    telnet.println("Fun param: " + String(std::get<1>(funPar)));
 
-    if(std::get<0>(myFunc) == nullptr){
-        telnet.println("Instruction unavailable, new input requested.");
-    } else if(std::get<1>(myFunc) == nullptr    ){
-        telnet.println("Parameter error, new input requested.");
-    } else{
-        //executeFunc(Steppers::uintToStepInstr(*get<0>(myFunc)), param);
+    while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++;}
+
+    telnet.println(functions[i].name + " funPar: " + String(std::get<0>(funPar)));
+
+    if (functions[i].name == std::get<0>(funPar)){
+        functions[i].fun(std::get<1>(funPar));
+    }else{
+        printError(std::get<0>(funPar));
     }
- //checks for a certain command
-    /*if (str == "ping") {
-        telnet.println("> pong"); 
-        Serial.println("- Telnet: pong");
-        telnet.print("> ");
-        telnet.println(String(telSens->getDistanceC()));
-        telnet.print("> ");
-    // disconnect the client
-    } else if (str == "bye") {
-        telnet.println("> disconnecting you...");
-        telnet.disconnectClient();
-    } else if (valid(str)){
-        telnet.println("I read this line: " + str);
-        telStep->goForwards(200);
-    }*/
+    telnet.print("> ");
 }
 
 void initTelnet(void){   
