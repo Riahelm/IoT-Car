@@ -72,22 +72,22 @@ Steppers::StepInstr *Steppers::uintToStepInstr(uint8_t num)
 
 /* Function callable by another thread, adds an instruction */
 void Steppers::goForwards(uint16_t millimeters) {
-    this->addInstruction(Steppers::GoForwards, millimeters);
+    this->_addInstruction(Steppers::GoForwards, millimeters);
 };
 
 /* Function callable by another thread, adds an instruction */
 void Steppers::goBackwards(uint16_t millimeters) {
-    this->addInstruction(Steppers::GoBackwards, millimeters);
+    this->_addInstruction(Steppers::GoBackwards, millimeters);
 };
 
 /* Function callable by another thread, adds an instruction */
 void Steppers::turnLeft(uint16_t degrees) {
-    this->addInstruction(Steppers::TurnLeft, degrees);
+    this->_addInstruction(Steppers::TurnLeft, degrees);
 };
 
 /* Function callable by another thread, adds an instruction */
 void Steppers::turnRight(uint16_t degrees) {
-    this->addInstruction(Steppers::TurnRight, degrees);
+    this->_addInstruction(Steppers::TurnRight, degrees);
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
@@ -156,7 +156,7 @@ void Steppers::_turnRight(uint16_t degrees){
 };
 
 /* Wrapper function to ease adding instructions */
-void Steppers::addInstruction(StepInstr instr, uint16_t param) {
+void Steppers::_addInstruction(StepInstr instr, uint16_t param) {
     _instructions.push_back(instr);
     _params.push_back(param);
     _instrCount->release();
