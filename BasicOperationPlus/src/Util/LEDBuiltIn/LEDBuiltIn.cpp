@@ -3,22 +3,22 @@
 LEDBuiltIn::LEDBuiltIn(uint16_t speed)
 {
     pinMode(LED_BUILTIN, OUTPUT);
-    blinking = false;
-    this->speed = speed;
+    _blinking = false;
+    this->_speed = speed;
 }
 
 void LEDBuiltIn::startBlink(void)
 {
-    blinking = true;
-    while(blinking == true){
+    _blinking = true;
+    while(_blinking == true){
         digitalWrite(LED_BUILTIN, HIGH);
-        delay(speed);
+        delay(_speed);
         digitalWrite(LED_BUILTIN, LOW);
-        delay(speed);
+        delay(_speed);
     }
 }
 
 void LEDBuiltIn::stopBlink(void)
 {
-    blinking = false;
+    _blinking = false;
 }
