@@ -18,7 +18,7 @@ DistanceSens *sensors;
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  setupMotors();
+  setupSteppers();
   setupSensors();
   setupWiFi();
   setupTelnet();
@@ -26,14 +26,23 @@ void setup() {
 }
 
 void setupTelnet(){
-  setMotors(motors);
+  /* Set steppers for telnet */
+  setSteppers(motors);
+  /* Set sensors for telnet */
   setSensors(sensors);
+  /* If device isn't connected, attempt connection through default settings */
+  if(!isConnected){
+    setupWiFi();
+  }
+  /* Initialize telnet */
   initTelnet();
+  /* Create thread for telnet.loop */
   std::thread telnetT(startTelnet);
+  /* Allows for thread to run independently from setup() */
   telnetT.detach();
 }
 
-void setupMotors(){
+void setupSteppers(){
   motors  = new Steppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
   std::thread motorT(&Steppers::start, motors);               /* Create stepper thread */
   motorT.detach();                                            /* Allows for thread to run independently from setup() */
