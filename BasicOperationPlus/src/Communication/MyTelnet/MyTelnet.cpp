@@ -130,15 +130,11 @@ void onTelnetInput(String str){
 
     int i = 0;
     std::get<1>(funPar).trim();
-    //telnet.println("Fun name: " + String(std::get<0>(funPar)));
-    //telnet.println("Fun param: " + String(std::get<1>(funPar)));
     
-
-    //telnet.println("Entering loop");
     while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++;}
-    //telnet.println("Exiting loop");
+
     telnet.println();
-    //telnet.println(functions[i].name + " funPar: " + String(std::get<0>(funPar)));
+
 
     if (functions[i].name == std::get<0>(funPar)){
         functions[i].fun(std::get<1>(funPar));
