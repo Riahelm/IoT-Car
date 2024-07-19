@@ -39,6 +39,7 @@ void parseTurnRight(String param){
     }
 }
 void parsePingLeft(String param){
+    telnet.println(String(param.length()));
     if(param.length() == 0){
         telnet.println(telSens->getDistanceL());
     }
@@ -59,7 +60,7 @@ void parseGoTo(String param){
 }
 
 void printError(String instr){
-    telnet.print("Input function was: " + instr + ", please give another input.");
+    telnet.println("Input function was: " + instr + ", please give another input.");
 };
 
 typedef void (*func_to_call)(String param);
@@ -112,15 +113,20 @@ static void onTelnetConnectionAttempt(String ip) {
 void onTelnetInput(String str){
     str.trim();
     str.toLowerCase();
+
     Serial.println(str);
+
     std::tuple<String, String> funPar = splitFunc(str);
+
     int i = 0;
     std::get<1>(funPar).trim();
     telnet.println("Fun name: " + String(std::get<0>(funPar)));
     telnet.println("Fun param: " + String(std::get<1>(funPar)));
 
-    while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++;}
+    telnet.println("Inside loop");
+    while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++; telnet.print(".");}
 
+    telnet.println();
     telnet.println(functions[i].name + " funPar: " + String(std::get<0>(funPar)));
 
     if (functions[i].name == std::get<0>(funPar)){
