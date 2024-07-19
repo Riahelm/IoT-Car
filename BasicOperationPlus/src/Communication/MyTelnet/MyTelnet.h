@@ -11,7 +11,7 @@
 
 #define TELNET_PORT 23
 #define THREAD_POLLING_INTERVAL 20
-#define NUM_OF_COMMANDS 11
+#define NUM_OF_COMMANDS 12
 
 void initTelnet(void);
 

@@ -39,17 +39,19 @@ void parseTurnRight(String param){
     }
 }
 void parsePingLeft(String param){
-    telnet.println(String(param.length()));
+    telnet.println("Param L: " + String(param.length()));
     if(param.length() == 0){
         telnet.println(telSens->getDistanceL());
     }
 }
 void parsePingCenter(String param){
+    telnet.println("Param L: " + String(param.length()));
     if(param.length() == 0){
         telnet.println(telSens->getDistanceC());
     }
 }
 void parsePingRight(String param){
+    telnet.println("Param L: " + String(param.length()));
     if(param.length() == 0){
         telnet.println(telSens->getDistanceR());
     }
@@ -57,6 +59,13 @@ void parsePingRight(String param){
 
 void parseGoTo(String param){
     //TBD 
+}
+
+void parseDisconnect(String param){
+    if (param.length() != 0){
+        telnet.println("Disconnecting regardless of parameter...");
+    }
+    telnet.disconnectClient();
 }
 
 void printError(String instr){
@@ -81,6 +90,7 @@ myFunc_t functions[NUM_OF_COMMANDS] = {
     {"pingcenter",  parsePingCenter},
     {"pingright",   parsePingRight},
     {"goto",        parseGoTo},
+    {"disconnect",  parseDisconnect},
     {"error",       printError},
 };
 
@@ -120,18 +130,19 @@ void onTelnetInput(String str){
 
     int i = 0;
     std::get<1>(funPar).trim();
-    telnet.println("Fun name: " + String(std::get<0>(funPar)));
-    telnet.println("Fun param: " + String(std::get<1>(funPar)));
+    //telnet.println("Fun name: " + String(std::get<0>(funPar)));
+    //telnet.println("Fun param: " + String(std::get<1>(funPar)));
+    
 
-    telnet.println("Inside loop");
-    while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++; telnet.print(".");}
-
+    //telnet.println("Entering loop");
+    while(i < NUM_OF_COMMANDS && functions[i].name != std::get<0>(funPar)){i++;}
+    //telnet.println("Exiting loop");
     telnet.println();
-    telnet.println(functions[i].name + " funPar: " + String(std::get<0>(funPar)));
+    //telnet.println(functions[i].name + " funPar: " + String(std::get<0>(funPar)));
 
     if (functions[i].name == std::get<0>(funPar)){
         functions[i].fun(std::get<1>(funPar));
-    }else{
+    }else if(std::get<0>(funPar).length() != 0){
         printError(std::get<0>(funPar));
     }
     telnet.print("> ");
