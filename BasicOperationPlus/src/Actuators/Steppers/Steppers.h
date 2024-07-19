@@ -15,8 +15,8 @@
 #define G15 360     /* Number of steps to take to turn 15 degree                            */
 #define G30 720     /* Number of steps to take to turn 30 degrees                           */
 #define G45 1080    /* Number of steps to take to turn 45 degrees                           */
-//#define G90 2160    /* Number of steps to take to turn 90 degrees                           */
-#define G90 2180 /* Experimental value */
+//#define G90 2160  /* Number of steps to take to turn 90 degrees, legacy value             */
+#define G90 2180    /* Experimental value                                                   */
 
 #include "Arduino.h"
 #include <list> /* Utility library */
@@ -31,21 +31,19 @@ class Steppers{
         /* Class destructor */
         ~Steppers();
 
-        void start(void); /* Function starts the connection to the motors. Best utilized as a thread                */
-        enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight}; /* Used to distinguish the instructions      */
-        static StepInstr *uintToStepInstr(uint8_t num);/* Function to convert an integer into a stepper instruction, */
-                                                /* returns NULL if value is not assignable                          */
-        void goForwards (uint16_t millimeters); /* Function to move both motors forwards                                 */
-        void goBackwards(uint16_t millimeters); /* Function to move both motors backwards                                */
-        void turnLeft   (uint16_t degrees);     /* Function to turn to the left                                          */
-        void turnRight  (uint16_t degrees);     /* Function to turn to the right                                         */ 
-        /* Function to add an instruction to the tasks to perform, requires the task and the parameter for it */
-        void addInstruction(StepInstr instr, uint16_t param);
+        void start(void); /* Function starts the connection to the motors. Best utilized as a thread                    */
+        enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight}; /* Used to distinguish the instructions          */
+        static StepInstr *uintToStepInstr(uint8_t num); /* Function to convert an integer into a stepper instruction,   */
+                                                        /* returns NULL if value is not assignable                      */
+        void goForwards (uint16_t millimeters);         /* Function to move both motors forwards                        */
+        void goBackwards(uint16_t millimeters);         /* Function to move both motors backwards                       */
+        void turnLeft   (uint16_t degrees);             /* Function to turn to the left                                 */
+        void turnRight  (uint16_t degrees);             /* Function to turn to the right                                */ 
     private:
         uint8_t _speed; /* Time to take between steps of the motor                                                      */
-        std::list<StepInstr> _instructions; /* List of instructions to perform                                      */
-        std::list<uint16_t> _params;             /* List of parameters to use                                            */
-        MySemaphore *_instrCount;           /* Number of instructions available, if it is at 0 it blocks the thread */
+        std::list<StepInstr> _instructions; /* List of instructions to perform                                          */
+        std::list<uint16_t> _params;        /* List of parameters to use                                                */
+        MySemaphore *_instrCount;           /* Number of instructions available, if it is at 0 it blocks the thread     */
         
         uint8_t _pinsSx[4]; /* Left motor pins  */
         uint8_t _pinsDx[4]; /* Right motor pins */
@@ -58,6 +56,8 @@ class Steppers{
         void _turnLeft   (uint16_t degrees);
         /* Function to turn right, acts directly on the motors, requires the amount of degrees to turn */
         void _turnRight  (uint16_t degrees);
+        /* Function to add an instruction to the tasks to perform, requires the task and the parameter for it */
+        void _addInstruction(StepInstr instr, uint16_t param);
         /* Function to lower all pin output */
         void _lowPins(void);
         /* Function to turn millimeters into steps */
