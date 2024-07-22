@@ -10,16 +10,17 @@
 #define STEPS_PER_REVOLUTION 2048 /* Hardware property: specific to the BYJ28 stepper       */
 #define STEP_PER_DISTANCE 10      /* Hardware property: Effectively 9.802                   */ 
 #define G1  24      /* Number of steps to take to turn 1 degree                             */
-#define G5  120     /* Number of steps to take to turn 5 degree                             */
-#define G10 240     /* Number of steps to take to turn 10 degree                            */
-#define G15 360     /* Number of steps to take to turn 15 degree                            */
-#define G30 720     /* Number of steps to take to turn 30 degrees                           */
-#define G45 1080    /* Number of steps to take to turn 45 degrees                           */
-//#define G90 2160  /* Number of steps to take to turn 90 degrees, legacy value             */
-#define G90 2180    /* Experimental value                                                   */
+#define G5  121     /* Number of steps to take to turn 5 degree                             */
+#define G10 243     /* Number of steps to take to turn 10 degree                            */
+#define G15 364     /* Number of steps to take to turn 15 degree                            */
+#define G30 729     /* Number of steps to take to turn 30 degrees                           */
+#define G45 1094    /* Number of steps to take to turn 45 degrees                           */
+#define G90 2188    /* Number of steps to take to turn 90 degrees                           */
+#define G180 4376   /* Number of steps to take to turn 180 degrees                          */
 
 #include "Arduino.h"
 #include <list> /* Utility library */
+#include "../../Util/Arrays/Arrays.h"           /* Utility library */
 #include "../../Util/MySemaphore/MySemaphore.h" /* Synchronization library */
 
 /* Class that implements a threadable system with two stepper motors that allow for simple movement */

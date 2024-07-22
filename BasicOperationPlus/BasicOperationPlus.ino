@@ -19,28 +19,28 @@ void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   setupSteppers();
-  setupSensors();
-  setupWiFi();
-  setupTelnet();
-  delay(2500);                                                /* Wait for the sensors to stabilize */
+  //setupSensors();
+  //setupWiFi();
+  //setupTelnet();
+  delay(1500);                                                /* Wait for the sensors to stabilize */
 }
-
+/*
 void setupTelnet(){
-  /* Set steppers for telnet */
+  /* Set steppers for telnet 
   setSteppers(motors);
-  /* Set sensors for telnet */
+  /* Set sensors for telnet 
   setSensors(sensors);
-  /* If device isn't connected, attempt connection through default settings */
+  /* If device isn't connected, attempt connection through default settings 
   if(!isConnected){
     setupWiFi();
   }
-  /* Initialize telnet */
+  /* Initialize telnet 
   initTelnet();
-  /* Create thread for telnet.loop */
+  /* Create thread for telnet.loop 
   std::thread telnetT(startTelnet);
-  /* Allows for thread to run independently from setup() */
+  /* Allows for thread to run independently from setup() 
   telnetT.detach();
-}
+}*/
 
 void setupSteppers(){
   motors  = new Steppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
@@ -55,4 +55,6 @@ void setupSensors(){
 }
 
 void loop() {
+  motors->turnLeft(720);
+  while(true);
 }

@@ -189,7 +189,7 @@ void parsers::TurnLeft(String param){
     /* Turn parameter into usable data */ 
     long normalParam = param.toInt(); 
     /* Perform parameter check */
-    if(0 < normalParam / 360 < 1){
+    if(0 <= normalParam <= 360){
         telStep->turnLeft(normalParam);
     }else{
         telnet.println("Parameter error. Parameter must be a natural number between 0 and 360.");
@@ -200,7 +200,7 @@ void parsers::TurnRight(String param){
     /* Turn parameter into usable data */ 
     long normalParam = param.toInt(); 
     /* Perform parameter check */
-    if(0 < normalParam / 360 < 1){
+    if(0 <= normalParam <= 360){
         telStep->turnRight(normalParam);
     }else{
         telnet.println("Parameter error. Parameter must be a natural number between 0 and 360.");
