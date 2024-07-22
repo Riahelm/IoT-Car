@@ -177,8 +177,5 @@ uint16_t Steppers::_mmToSteps(uint16_t millimeters) {
 
 /* Utility function to turn degrees into steps */
 uint16_t Steppers::_degreesToSteps(uint16_t degrees){
-    if(degrees == 90){
-        return G90;
-    } 
     return degrees * G1;
 }
