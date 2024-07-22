@@ -1,7 +1,7 @@
 #include "Arrays.h"
 
-template <typename T>
+template<typename T, int N>
 
-int getArraySize(T* array){
-    return (sizeof(array) / sizeof(T));
+constexpr int array_size(T (&)[N]){
+    return N;
 }

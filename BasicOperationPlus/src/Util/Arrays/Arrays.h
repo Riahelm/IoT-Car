@@ -1,7 +1,6 @@
 
-/* Template for a generic type T */
-template <typename T>
+#include <cstddef>
 
-/* Given an array and their type, determine its length */
-int getArraySize(T*);
+template <typename T, size_t N>
 
+constexpr int array_size(T (&)[N]);
