@@ -93,8 +93,8 @@ void Steppers::turnRight(uint16_t degrees) {
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_goForwards(uint16_t millimeters){
     uint8_t count;
-    
-    for (uint16_t i = 0; i < _mmToSteps(millimeters); i++){
+    uint16_t bound = _mmToSteps(millimeters);
+    for (uint16_t i = 0; i < bound; i++){
         count = i % 4;
         digitalWrite(_pinsSx[count], HIGH);
         digitalWrite(_pinsDx[count], HIGH);
@@ -110,7 +110,8 @@ void Steppers::_goForwards(uint16_t millimeters){
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_goBackwards(uint16_t millimeters){
     uint8_t count;
-    for (uint16_t i = 0; i < _mmToSteps(millimeters); i++){
+    uint16_t bound = _mmToSteps(millimeters);
+    for (uint16_t i = 0; i < bound; i++){
         count = i % 4;
         digitalWrite(_pinsSx[3 - count], HIGH);
         digitalWrite(_pinsDx[3 - count], HIGH);
@@ -126,7 +127,8 @@ void Steppers::_goBackwards(uint16_t millimeters){
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_turnLeft(uint16_t degrees){
     uint8_t count;
-    for (uint16_t i = 0; i < _degreesToSteps(degrees)/2; i++){
+    uint16_t bound = _degreesToSteps(degrees)/2;
+    for (uint16_t i = 0; i < bound; i++){
         count = i % 4;
         digitalWrite(_pinsSx[3 - count], HIGH);
         digitalWrite(_pinsDx[count], HIGH);
@@ -142,7 +144,8 @@ void Steppers::_turnLeft(uint16_t degrees){
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void Steppers::_turnRight(uint16_t degrees){
     uint8_t count;
-    for (uint16_t i = 0; i < _degreesToSteps(degrees)/2; i++){
+    uint16_t bound = _degreesToSteps(degrees)/2;
+    for (uint16_t i = 0; i < bound; i++){
         count = i % 4;
         digitalWrite(_pinsSx[count], HIGH);
         digitalWrite(_pinsDx[3 - count], HIGH);
@@ -177,5 +180,20 @@ uint16_t Steppers::_mmToSteps(uint16_t millimeters) {
 
 /* Utility function to turn degrees into steps */
 uint16_t Steppers::_degreesToSteps(uint16_t degrees){
-    return degrees * G1;
+    std::array<uint8_t, 8> knownSteps    = {1,5,10,15,30,45,90,180}; 
+    std::array<uint16_t, 8> knownDegrees = {G1,G5,G10,G15,G30,G45,G90,G180};
+    uint8_t i = knownSteps.size() - 1;
+    uint16_t steps = 0;
+
+    if(degrees == 0){
+        return 0;
+    }
+
+    do{
+        while(knownSteps[i] > degrees){i--;}
+        degrees -= knownSteps[i];
+        steps += knownDegrees[i];
+    }while(degrees != 0);
+
+    return steps;
 }
