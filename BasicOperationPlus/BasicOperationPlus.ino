@@ -1,10 +1,15 @@
 #include "Arduino.h"
 #include <thread>
 #include "src/Util/Pins.h"
-#include "src/Actuators/Steppers/Steppers.h"
+#include "src/Actuators/Steppers/Abstract/AbstractSteppers.h"
+#include "src/Actuators/Steppers/Simulated/SimulatedSteppers.h"
+#include "src/Actuators/Steppers/Physical/PhysicalSteppers.h"
 #include "src/Sensors/Distance/DistanceSens.h"
 #include "src/Communication/MyWiFi/MyWiFi.h"
 #include "src/Communication/MyTelnet/MyTelnet.h"
+
+
+#define IS_REAL
 
 /* Store all pins in the respective structures */
 uint8_t leftMotorPins[4]    = {MOTORSTEP_L_1, MOTORSTEP_L_2, MOTORSTEP_L_3, MOTORSTEP_L_4};
@@ -12,39 +17,45 @@ uint8_t rightMotorPins[4]   = {MOTORSTEP_R_1, MOTORSTEP_R_2, MOTORSTEP_R_3, MOTO
 uint8_t sensorPins[3]       = {DIST_L_ECHO, DIST_C_ECHO, DIST_R_ECHO};
 uint8_t triggerPin          = DIST_TRIG;
 
-Steppers *motors;
-DistanceSens *sensors;
+#ifdef IS_REAL
+  PhysicalSteppers *motors;
+  DistanceSens *sensors;
+#else
+  SimulatedSteppers *motors;
+  //SimulatedDistanceSens *sensors;
+#endif
+
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   setupSteppers();
-  //setupSensors();
-  //setupWiFi();
-  //setupTelnet();
+  setupSensors();
+  setupWiFi();
+  setupTelnet(motors, sensors);
   delay(1500);                                                /* Wait for the sensors to stabilize */
 }
-/*
-void setupTelnet(){
-  /* Set steppers for telnet 
+
+void setupTelnet(AbstractSteppers *motors, DistanceSens *sensors){
+  /* Set steppers for telnet */
   setSteppers(motors);
-  /* Set sensors for telnet 
+  /* Set sensors for telnet */
   setSensors(sensors);
-  /* If device isn't connected, attempt connection through default settings 
+  /* If device isn't connected, attempt connection through default settings */
   if(!isConnected){
     setupWiFi();
   }
-  /* Initialize telnet 
+  /* Initialize telnet */
   initTelnet();
-  /* Create thread for telnet.loop 
+  /* Create thread for telnet.loop */
   std::thread telnetT(startTelnet);
-  /* Allows for thread to run independently from setup() 
+  /* Allows for thread to run independently from setup() */
   telnetT.detach();
-}*/
+}
 
 void setupSteppers(){
-  motors  = new Steppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
-  std::thread motorT(&Steppers::start, motors);               /* Create stepper thread */
+  motors  = new PhysicalSteppers(leftMotorPins, rightMotorPins);      /* Create stepper object */
+  std::thread motorT(&PhysicalSteppers::start, motors);               /* Create stepper thread */
   motorT.detach();                                            /* Allows for thread to run independently from setup() */
 }
 
@@ -55,6 +66,6 @@ void setupSensors(){
 }
 
 void loop() {
-  motors->turnLeft(720);
+  motors->turnLeft(360);
   while(true);
 }
