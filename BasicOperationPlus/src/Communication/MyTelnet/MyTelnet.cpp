@@ -2,7 +2,8 @@
 #include "MyTelnet.h"
 
 static ESPTelnet telnet;
-static Steppers *telStep;
+static SimulationMap *telMap = nullptr;
+static AbstractSteppers *telStep;
 static DistanceSens *telSens;
 
 /* Functions that are strictly to be used as callbacks for ESPTelnet */
@@ -44,6 +45,8 @@ namespace parsers{
     void PingCenter(String);
     /* Function to print the distance value detected by the sensor to the right, no input required              */
     void PingRight(String);
+    /* Function to print the virtual map, requires the virtualMap to be enabled */
+    void PrintMap(String);
     /* Function to parse the parameter used for moving to a (X,Y) position, 
        input must not exceed boundaries set by the map area                                                     */
     void GoTo(String);
@@ -62,6 +65,7 @@ myFunc_t functions[NUM_OF_COMMANDS] = {
     {"pingleft",    parsers::PingLeft},
     {"pingcenter",  parsers::PingCenter},
     {"pingright",   parsers::PingRight},
+    {"printmap",    parsers::PrintMap},
     {"goto",        parsers::GoTo},
     {"disconnect",  parsers::Disconnect},
 };
@@ -70,8 +74,9 @@ myFunc_t functions[NUM_OF_COMMANDS] = {
 void printError(String);
 
 
-void setSteppers(Steppers *steppers)   {telStep = steppers;}
+void setSteppers(AbstractSteppers *steppers)   {telStep = steppers;}
 void setSensors (DistanceSens *sensors){telSens = sensors;}
+void setMap(SimulationMap *map){telMap = map;}
 
 void initTelnet(void){   
 
@@ -227,6 +232,18 @@ void parsers::PingRight(String param){
         telnet.println(telSens->getDistanceR());
     }
 }
+
+ void parsers::PrintMap(String param){
+    if(param.length() == 0 && telMap != nullptr){
+        uint16_t len = 10;
+        for (uint16_t i = 0; i < len; i++){
+            for (uint16_t j = 0; j < len; i++){
+                telnet.print(telMap->grid[i][j]);
+            }
+            telnet.println();
+        }
+    }
+ }
 
 void parsers::GoTo(String param){
     //TBD 
