@@ -13,3 +13,5 @@ Sources:
 [Paper on potential fields](https://www.sciencedirect.com/topics/computer-science/artificial-potential-field)
 
 [Paper about obstacle avoidance on the Arduino UNO](https://iopscience.iop.org/article/10.1088/1757-899X/707/1/012012/pdf)
+
+[Paper on the Artificial Potential Field algorithm](https://link.springer.com/article/10.1186/s13638-019-1396-2)
