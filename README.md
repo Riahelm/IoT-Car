@@ -15,3 +15,5 @@ Sources:
 [Paper about obstacle avoidance on the Arduino UNO](https://iopscience.iop.org/article/10.1088/1757-899X/707/1/012012/pdf)
 
 [Paper on the Artificial Potential Field algorithm](https://link.springer.com/article/10.1186/s13638-019-1396-2)
+
+[Second paper on the Artificial Potential Field algorithm](https://thesai.org/Downloads/Volume10No8/Paper_76-Artificial_Potential_Field_Algorithm_Implementation.pdf)
