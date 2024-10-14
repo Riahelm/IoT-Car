@@ -11,10 +11,8 @@
 /* Sensitive information */
 #define DEFAULT_WIFI_PASSWORD "Succ1234"
 
-/* Function used to connect to the default network */
-void setupWiFi(String = DEFAULT_WIFI_SSID, String = DEFAULT_WIFI_PASSWORD);   
-/* Function used to connect to a specific network */
-void setupWiFi(String, String);    
+/* Function used to connect to a network, has default values settable above */
+void setupWiFi(String = DEFAULT_WIFI_SSID, String = DEFAULT_WIFI_PASSWORD);     
 /* Function used to check if device is connected to a network */
 bool isConnected(void);
 

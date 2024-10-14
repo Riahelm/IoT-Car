@@ -1,7 +1,7 @@
-#include "Steppers.h" 
+#include "PhysicalSteppers.h" 
 
 /* Class constructor */
-Steppers::Steppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]){
+PhysicalSteppers::PhysicalSteppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]){
 
     this->_speed  = 2;  /* Default speed is 2, which is the minimum for a BYJ stepper                           */
     _instrCount   = new MySemaphore(0); /* Starting amount of instructions is zero                              */
@@ -19,79 +19,11 @@ Steppers::Steppers(const uint8_t (&leftPins)[4], const uint8_t (&rightPins)[4]){
 };
 
 /* Class destructor */
-Steppers::~Steppers(){};
 
-/* Function to start reading and executing commands in the instruction list. Best used as a thread.*/
-void Steppers::start(){
-    while(true){
-        
-        _instrCount->acquire();
-        uint16_t param = _params.front();
-
-        switch(_instructions.front()){
-            case GoForwards:
-                _goForwards(param);
-                break;
-            case GoBackwards:
-                _goBackwards(param);
-                break;
-            case TurnLeft:
-                _turnLeft(param);
-                break;
-            case TurnRight:
-                _turnRight(param);
-                break;
-        }
-
-        _instructions.pop_front();
-        _params.pop_front();
-    }
-}
-
-Steppers::StepInstr *Steppers::uintToStepInstr(uint8_t num)
-{   
-    StepInstr *res;
-    switch(num){
-        case 0:
-            *res = GoForwards;
-            break;
-        case 1:
-            *res = GoBackwards;
-            break;
-        case 2:
-            *res = TurnLeft;
-            break;
-        case 3:
-            *res = TurnRight;
-            break;
-    }
-    Serial.println("Num: " + String(num));
-    Serial.println("Instr: " + String(*res));
-    return (0 <= num <= 3 ? res: nullptr);
-}
-
-/* Function callable by another thread, adds an instruction */
-void Steppers::goForwards(uint16_t millimeters) {
-    this->_addInstruction(Steppers::GoForwards, millimeters);
-};
-
-/* Function callable by another thread, adds an instruction */
-void Steppers::goBackwards(uint16_t millimeters) {
-    this->_addInstruction(Steppers::GoBackwards, millimeters);
-};
-
-/* Function callable by another thread, adds an instruction */
-void Steppers::turnLeft(uint16_t degrees) {
-    this->_addInstruction(Steppers::TurnLeft, degrees);
-};
-
-/* Function callable by another thread, adds an instruction */
-void Steppers::turnRight(uint16_t degrees) {
-    this->_addInstruction(Steppers::TurnRight, degrees);
-};
+PhysicalSteppers::~PhysicalSteppers(){};
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
-void Steppers::_goForwards(uint16_t millimeters){
+void PhysicalSteppers::_goForwards(uint16_t millimeters){
     uint8_t count;
     uint16_t bound = _mmToSteps(millimeters);
     for (uint16_t i = 0; i < bound; i++){
@@ -108,7 +40,7 @@ void Steppers::_goForwards(uint16_t millimeters){
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
-void Steppers::_goBackwards(uint16_t millimeters){
+void PhysicalSteppers::_goBackwards(uint16_t millimeters){
     uint8_t count;
     uint16_t bound = _mmToSteps(millimeters);
     for (uint16_t i = 0; i < bound; i++){
@@ -125,7 +57,7 @@ void Steppers::_goBackwards(uint16_t millimeters){
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
-void Steppers::_turnLeft(uint16_t degrees){
+void PhysicalSteppers::_turnLeft(uint16_t degrees){
     uint8_t count;
     uint16_t bound = _degreesToSteps(degrees)/2;
     for (uint16_t i = 0; i < bound; i++){
@@ -142,7 +74,7 @@ void Steppers::_turnLeft(uint16_t degrees){
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
-void Steppers::_turnRight(uint16_t degrees){
+void PhysicalSteppers::_turnRight(uint16_t degrees){
     uint8_t count;
     uint16_t bound = _degreesToSteps(degrees)/2;
     for (uint16_t i = 0; i < bound; i++){
@@ -156,17 +88,10 @@ void Steppers::_turnRight(uint16_t degrees){
     };
 
     _lowPins();
-};
-
-/* Wrapper function to ease adding instructions */
-void Steppers::_addInstruction(StepInstr instr, uint16_t param) {
-    _instructions.push_back(instr);
-    _params.push_back(param);
-    _instrCount->release();
 };
 
 /* Utility function to lower all pins */
-void Steppers::_lowPins(void){
+void PhysicalSteppers::_lowPins(void){
     for (uint8_t i = 0; i < 4; i++){
         digitalWrite(_pinsSx[i], LOW);
         digitalWrite(_pinsDx[i], LOW);
@@ -174,12 +99,12 @@ void Steppers::_lowPins(void){
 };
 
 /* Utility function to turn millimeters into steps */
-uint16_t Steppers::_mmToSteps(uint16_t millimeters) {
+uint16_t PhysicalSteppers::_mmToSteps(uint16_t millimeters) {
     return (millimeters * STEP_PER_DISTANCE);
 };
 
 /* Utility function to turn degrees into steps */
-uint16_t Steppers::_degreesToSteps(uint16_t degrees){
+uint16_t PhysicalSteppers::_degreesToSteps(uint16_t degrees){
     std::array<uint8_t, 8> knownSteps    = {1,5,10,15,30,45,90,180}; 
     std::array<uint16_t, 8> knownDegrees = {G1,G5,G10,G15,G30,G45,G90,G180};
     uint8_t i = knownSteps.size() - 1;
