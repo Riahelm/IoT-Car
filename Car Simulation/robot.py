@@ -1,65 +1,95 @@
 import numpy as np
-
+import math
 from sphere import Sphere
 
 class Robot(Sphere):
-    def __init__(self, radius, coords, vision):
-        super().__init__(radius, coords)
-        self.vision = vision
+    def __init__(self, coords, **kwargs):
+        """
+        Robot of spherical shape
+        
+        Optional parameters
+        -------------------
+        
+        radius : float
+                 radius of the robot (default 1)
+                 
+        vision : float
+                 sensor max distance of the robot (default 6 * radius)
+
+        tolerance: int
+                   radius of newly added obstacles for increased performance (default 2)
+        
+        direction: radians
+                   initial direction of the robot (default 0)
+
+        sensor_angle: degrees
+                      fixed angular distance of sensors (default 45)
+        """
+        super().__init__(float(kwargs.get('radius', 1)), coords)
+        self.vision = float(kwargs.get('vision', self.radius * 6))
+        self.tol = int(kwargs.get('tolerance', 2))
+        self.direction = float(kwargs.get('radians', 0))
+        self.sensor_angle = float(kwargs.get('degrees', 45))
         self.path = []
-        self.knownObstacles = []
+
+    def addMap(self, mapShape):
+        if len(mapShape) != 2:
+            raise ValueError
+        self.digitalMap = np.zeros(mapShape)
 
     def isStuck(self) -> bool:
-        return len(self.path) >= 2 and self.path[-1] == self.path[-2]
+        return False
 
-    def findAndAddNewObstacles(self, obstacles):
-        for obstacle in obstacles:
-            if self.getDistance(obstacle.coords[0], obstacle.coords[1]) <= self.vision and obstacle not in self.knownObstacles:
-                self.knownObstacles.append(obstacle)
+    def seekObstacles(self, obstacleMap):
+        if True:
+            pass
+            found = False
+            leftDir  = self.direction - math.radians(self.sensor_angle)
+            rightDir = self.direction + math.radians(self.sensor_angle)
+    
+            if  self.mark_obstacles(obstacleMap, leftDir)        or \
+                self.mark_obstacles(obstacleMap, self.direction) or \
+                self.mark_obstacles(obstacleMap, rightDir):
+                    found = True
+                    print("Found an obstacle!")
+            return found
+    
+    def mark_obstacles(self, obstacleMap, angle):
+        found = False
+        (x, y) = self.coords
+        (cx, cy) = (x + round(self.vision * np.cos(angle)), y + round(self.vision * np.sin(angle)))
 
-#    def move(self, stepSize, Utot, Fx, Fy):
-#        # Save the current position to the path
-#        self.path.append(self.coords)
-#
-#        # Get the current position indices in the grid (interpreting correctly)
-#        i = min(max(int(self.coords[1]), 1), Fx.shape[1] - 2)  # Interpret y as x-axis
-#        j = min(max(int(self.coords[0]), 1), Fy.shape[0] - 2)  # Interpret x as y-axis
-#
-#        # Extract the 3x3 neighborhood around the current position
-#        neighborhood = Utot[i-1:i+2, j-1:j+2]
-#
-#        # Get the coordinates of the minimum potential within the 3x3 neighborhood
-#        min_coords_local = np.unravel_index(np.argmin(neighborhood), neighborhood.shape)
-#
-#        # Calculate the global coordinates by adjusting the local coordinates
-#        new_i = i - 1 + min_coords_local[0]  # New global i (y)
-#        new_j = j - 1 + min_coords_local[1]  # New global j (x)
-#
-#        # Update the robot's coordinates based on the calculated global coordinates
-#        self.coords = (new_j, new_i)  # Update global position (x, y)
-
-    def move(self, stepSize, Utot, Fx, Fy):
-      self.path.append(self.coords)
-      i = min(max(int(self.coords[1]), 1), Fx.shape[1] - 2)  # Interpret y as x-axis
-      j = min(max(int(self.coords[0]), 1), Fy.shape[0] - 2)  # Interpret x as y-axis 
-
-      angle = np.arctan2(Fy[i, j], Fx[i, j])
-      direction = (int(round(4 * angle / np.pi + 8)) % 8)
-      if direction == 0:      # East (Right)
-          dx, dy = 1, 0
-      elif direction == 1:    # Northeast
-          dx, dy = 1, 1
-      elif direction == 2:    # North (Up)
-          dx, dy = 0, 1
-      elif direction == 3:    # Northwest
-          dx, dy = -1, 1
-      elif direction == 4:    # West (Left)
-          dx, dy = -1, 0
-      elif direction == 5:    # Southwest
-          dx, dy = -1, -1
-      elif direction == 6:    # South (Down)
-          dx, dy = 0, -1
-      elif direction == 7:    # Southeast
-          dx, dy = 1, -1
-
-      self.coords = (self.coords[0] + dx * stepSize, self.coords[1] + dy * stepSize)
+        # Bresenham's Line Algorithm
+        dx = abs(cx - x)
+        dy = abs(cy - y)
+        sx = 1 if x < cx else -1
+        sy = 1 if y < cy else -1
+        if dx > dy:
+            err = dx / 2.0
+            while x != cx and found == False:
+                if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
+                    if obstacleMap[x, y]:  # Check if there's an obstacle
+                        self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
+                        print("Found one")
+                        found = True
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != cy:
+                if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
+                    if obstacleMap[x, y]:  # Check if there's an obstacle
+                        self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
+                        print("Found one")
+                        found = True
+                        break
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+        return found
+    

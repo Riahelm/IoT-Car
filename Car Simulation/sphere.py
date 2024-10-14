@@ -5,15 +5,18 @@ class Sphere:
         self.radius = radius
         self.coords = coords
 
-    def getDistance(self, x, y) -> float:
+    def get_distance(self, x, y) -> float:
         return getDistanceFromCoordinate(self.coords[0], self.coords[1], x, y)
 
+    def get_distance_coords(self, coords) -> float:
+        return getDistanceFromCoordinate(self.coords[0], self.coords[1], coords[0], coords[1])
+    
     def isTouching(self, Sphere) -> bool:
-        return self.getDistance(Sphere.coords[0], Sphere.coords[1]) <= self.radius + Sphere.radius
+        return self.get_distance(Sphere.coords[0], Sphere.coords[1]) <= self.radius + Sphere.radius
 
     def isInside(self, Sphere) -> bool:
-        return self.getDistance(Sphere.coords[0], Sphere.coords[1]) <= Sphere.radius
+        return self.get_distance(Sphere.coords[0], Sphere.coords[1]) <= Sphere.radius
 
     def isOutside(self, Sphere) -> bool:
-        return self.getDistance(Sphere.coords[0], Sphere.coords[1]) >= Sphere.radius
+        return self.get_distance(Sphere.coords[0], Sphere.coords[1]) >= Sphere.radius
     

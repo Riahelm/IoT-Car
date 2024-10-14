@@ -2,14 +2,18 @@ from lattice import Lattice
 from robot import Robot
 from goal import Goal
 from obstacle import Obstacle
+import numpy as np
+from matplotlib import pyplot as plt
 
-lat = Lattice(30, 30, 0.25, 0.35, 200)
+lat = Lattice(600, 400, Robot((50, 350), vision= 2000), Goal(1, (400,50)))
 
-lat.randomize()
+#lat.addObstacle(Obstacle(1, (12,6)))
 
-#lat.addRobot(Robot(1,(2,2), 10))
-#
-#lat.addGoal(Goal(2,(25,25), 0.35))
-#lat.addObstacle(Obstacle(1, (11, 9), 100, lat.robot.radius * 2))
-#lat.addObstacle(Obstacle(1, (19, 11), 100, lat.robot.radius * 2))
-lat.animate()
+lat.genObs()
+#for i in range (150, 350):
+#    lat.addObstacle(Obstacle(1, (5, i), lat.obstacleRepulsion, lat.safeDistance))
+
+lat.plotPath()
+
+#lat.animate(skip = 1)
+
