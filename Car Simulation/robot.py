@@ -42,13 +42,14 @@ class Robot(Sphere):
 
     def seekObstacles(self, obstacleMap):
         found = False
-        leftDir  = self.direction - math.radians(self.sensor_angle)
-        rightDir = self.direction + math.radians(self.sensor_angle)
-
-        if  self.mark_obstacles(obstacleMap, leftDir)        or \
-            self.mark_obstacles(obstacleMap, self.direction) or \
-            self.mark_obstacles(obstacleMap, rightDir):
-                found = True
+        leftDir  = self.direction + math.radians(self.sensor_angle)
+        rightDir = self.direction - math.radians(self.sensor_angle)
+        if self.mark_obstacles(obstacleMap, leftDir):
+            found = True
+        if self.mark_obstacles(obstacleMap, self.direction):
+            found = True
+        if self.mark_obstacles(obstacleMap, rightDir):
+            found = True
         return found
     
     def mark_obstacles(self, obstacleMap, angle):
@@ -65,7 +66,7 @@ class Robot(Sphere):
             err = dx / 2.0
             while x != cx and found == False:
                 if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-                    if self.digitalMap[x, y] != obstacleMap[x, y] == True :  # Check if there's an obstacle
+                    if obstacleMap[x, y] and not self.digitalMap[x, y]:  # Check if there's an obstacle
                         self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
                         found = True
                 err -= dy
@@ -77,7 +78,7 @@ class Robot(Sphere):
             err = dy / 2.0
             while y != cy and found == False:
                 if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-                    if self.digitalMap[x, y] != obstacleMap[x, y] == True:  # Check if there's an obstacle
+                    if obstacleMap[x, y] and not self.digitalMap[x, y]:  # Check if there's an obstacle
                         self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
                         found = True 
                 err -= dx

@@ -5,11 +5,12 @@ from obstacle import Obstacle
 import numpy as np
 from matplotlib import pyplot as plt
 
-lat = Lattice(600, 400, Robot((50, 350), vision= 2, direction= 0), Goal(1, (400,50)))
+lat = Lattice(600, 400, Robot((50, 350), radius = 3, vision = 250, direction = np.pi/4), Goal(1, (400, 50)))
 
+lat.robot.tol = 1 #int(lat.safeDistance)
 lat.genObs()
-#lat.addObstacle(Obstacle(1, (15, 12)))
+offset = int(lat.robot.vision / 2)
 
 lat.plotPath(skip=10, max_its = 1500)
-#lat.animate(skip = 1)
+#lat.animate(skip = 10, max_its = 100)
 

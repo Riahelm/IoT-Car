@@ -59,7 +59,6 @@ class Lattice:
         robot.addMap(self.X.shape)
         self.Fx = np.zeros_like(self.X, dtype=float)
         self.Fy = np.zeros_like(self.Y, dtype=float)
-        self.obstacles = []
         self.goals = [goal]
         self.obstacleMap = np.zeros_like(self.X, dtype=bool)
         self.goalAttraction = float(kwargs.get('goalAttraction', 1/700.))
@@ -70,12 +69,10 @@ class Lattice:
         if isinstance(g, Goal):
             self.goals.append(g)
 
-
     def addObstacle(self, o):
         (x, y) = o.coords
         (xs, ys) = self.obstacleMap.shape
         if isinstance(o, Obstacle) and 0 <= x < xs and 0 <= y < ys:
-            self.obstacles.append(o)
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
        
@@ -94,7 +91,7 @@ class Lattice:
           g = self.goals[0].coords
           Uatt = self.goalAttraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
 
-      d = bwdist(self.obstacleMap==0)
+      d = bwdist(self.robot.digitalMap==0)
       rescaleD = (d/100.) + 1
       Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
       Urep [rescaleD > self.safeDistance] = 0
@@ -105,15 +102,13 @@ class Lattice:
           route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
           for _ in range(max_its):
             current_point = route[-1,:]
-            #if self.robot.seekObstacles(self.obstacleMap):
-            #    print("Found obs")
-            #    [gy, gx] = np.gradient(-self.getPotential())
+            if self.robot.seekObstacles(self.obstacleMap):
+                print("Found obs")
+                [gy, gx] = np.gradient(-self.getPotential())
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
               break
-            
-            #ix = np.clip(int(round(current_point[1])), 0, gx.shape[0] - 1)
-            #iy = np.clip(int(round(current_point[0])), 0, gy.shape[1] - 1)
+
             ix = int(round( current_point[1] ))
             iy = int(round( current_point[0] ))
             vx = gx[ix, iy]
@@ -173,10 +168,10 @@ class Lattice:
         """
         skip = kwargs.get('skip', 10)
         max_its = kwargs.get('max_its', 400)
-        self.drawFullForce(skip)
         start = self.robot.coords
         goal = self.goals[0].coords
         route = self.calcPath(start, goal, max_its)
+        self.drawFullForce(skip)
         plt.plot(start[0], start[1], 'bo', markersize=10)
         plt.plot(goal[0], goal[1], 'go', markersize=10)
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
