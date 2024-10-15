@@ -74,7 +74,7 @@ class Lattice:
     def addObstacle(self, o):
         (x, y) = o.coords
         (xs, ys) = self.obstacleMap.shape
-        if isinstance(o, Obstacle) and -xs <= x < xs and -ys <= y < ys:
+        if isinstance(o, Obstacle) and 0 <= x < xs and 0 <= y < ys:
             self.obstacles.append(o)
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
@@ -94,28 +94,33 @@ class Lattice:
           g = self.goals[0].coords
           Uatt = self.goalAttraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
 
-      d = bwdist(self.robot.digitalMap==0)
+      d = bwdist(self.obstacleMap==0)
       rescaleD = (d/100.) + 1
       Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
       Urep [rescaleD > self.safeDistance] = 0
       return Uatt + Urep
 
-    def calcPath(self, start_coords, end_coords, max_its = 1500):
+    def calcPath(self, start_coords, end_coords, max_its):
           [gy, gx] = np.gradient(-self.getPotential())
           route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
           for _ in range(max_its):
             current_point = route[-1,:]
             #if self.robot.seekObstacles(self.obstacleMap):
+            #    print("Found obs")
             #    [gy, gx] = np.gradient(-self.getPotential())
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
               break
+            
+            #ix = np.clip(int(round(current_point[1])), 0, gx.shape[0] - 1)
+            #iy = np.clip(int(round(current_point[0])), 0, gy.shape[1] - 1)
             ix = int(round( current_point[1] ))
             iy = int(round( current_point[0] ))
             vx = gx[ix, iy]
             vy = gy[ix, iy]
             dt = 1 / np.linalg.norm([vx, vy])
-            next_point = current_point + dt*np.array( [vx, vy] )
+            self.robot.direction = np.arctan2(vx, vy)
+            next_point = current_point + dt*np.array([vx, vy])
             route = np.vstack( [route, next_point] )
           route = route[1:,:]
           return route
@@ -132,11 +137,11 @@ class Lattice:
             self.robot_patch = plt.Circle(self.robot.coords, self.robot.radius, color='b', alpha=0.5)
             ax.add_patch(self.robot_patch)
 
-        # Update obstacles
-        #(obsY, obsX) = np.where(self.robot.digitalMap == True)
-        ##for x, y in zip(obsX, obsY):
-        ##    obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
-        ##    ax.add_patch(obstacle_patch)
+        #Update obstacles
+        (obsY, obsX) = np.where(self.robot.digitalMap == True)
+        for x, y in zip(obsX, obsY):
+            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
+            ax.add_patch(obstacle_patch)
         
         # Update goals
         for goal in self.goals:
@@ -162,12 +167,16 @@ class Lattice:
         -------------------
         skip: int
               up/down scaling of the quiver plot for animating
+
+        max_its: int
+                 max number of Euler steps to generate (default 400)
         """
         skip = kwargs.get('skip', 10)
+        max_its = kwargs.get('max_its', 400)
         self.drawFullForce(skip)
         start = self.robot.coords
         goal = self.goals[0].coords
-        route = self.calcPath(start, goal)
+        route = self.calcPath(start, goal, max_its)
         plt.plot(start[0], start[1], 'bo', markersize=10)
         plt.plot(goal[0], goal[1], 'go', markersize=10)
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
@@ -183,33 +192,35 @@ class Lattice:
         
         skip: int
               up/down scaling of the quiver plot for animating
+
+        max_its: int
+                 max number of Euler steps to generate (default 400)
         """
         skip = int(kwargs.get('skip', 10))
+        max_its = kwargs.get('max_its', 400)
         fig, ax = self.draw(skip)
 
         # Define the robot's start and end coordinates
         start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
-        path = self.calcPath(start_coords, self.goals[0].coords)
+        path = self.calcPath(start_coords, self.goals[0].coords, max_its)
 
         def generate():
           global stop
           stop = False
           for i in tqdm(range(len(path))):
              yield i
-             #print("Generating:", i, "° frame out of: ", len(path))
 
         def update(i):
             global stop
                 
-            #self.robot.findAndAddNewObstacles(self.obstacles)
             if i < len(path):
                self.robot.coords = path[i]
             
             self.movePatches(ax)
-            #[gy, gx] = np.gradient(-self.getPotential())
-            quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], self.Fx[::skip,::skip], self.Fy[::skip,::skip], pivot = 'mid')
+            [gy, gx] = np.gradient(-self.getPotential())
+            quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], gx[::skip,::skip], gy[::skip,::skip], pivot = 'mid')
             return quiver
         
         matplotlib.rcParams['animation.embed_limit'] = 2**128

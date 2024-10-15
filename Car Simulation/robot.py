@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from sphere import Sphere
-
+from matplotlib import pyplot as plt
 class Robot(Sphere):
     def __init__(self, coords, **kwargs):
         """
@@ -41,18 +41,15 @@ class Robot(Sphere):
         return False
 
     def seekObstacles(self, obstacleMap):
-        if True:
-            pass
-            found = False
-            leftDir  = self.direction - math.radians(self.sensor_angle)
-            rightDir = self.direction + math.radians(self.sensor_angle)
-    
-            if  self.mark_obstacles(obstacleMap, leftDir)        or \
-                self.mark_obstacles(obstacleMap, self.direction) or \
-                self.mark_obstacles(obstacleMap, rightDir):
-                    found = True
-                    print("Found an obstacle!")
-            return found
+        found = False
+        leftDir  = self.direction - math.radians(self.sensor_angle)
+        rightDir = self.direction + math.radians(self.sensor_angle)
+
+        if  self.mark_obstacles(obstacleMap, leftDir)        or \
+            self.mark_obstacles(obstacleMap, self.direction) or \
+            self.mark_obstacles(obstacleMap, rightDir):
+                found = True
+        return found
     
     def mark_obstacles(self, obstacleMap, angle):
         found = False
@@ -68,9 +65,8 @@ class Robot(Sphere):
             err = dx / 2.0
             while x != cx and found == False:
                 if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-                    if obstacleMap[x, y]:  # Check if there's an obstacle
+                    if self.digitalMap[x, y] != obstacleMap[x, y] == True :  # Check if there's an obstacle
                         self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
-                        print("Found one")
                         found = True
                 err -= dy
                 if err < 0:
@@ -79,13 +75,11 @@ class Robot(Sphere):
                 x += sx
         else:
             err = dy / 2.0
-            while y != cy:
+            while y != cy and found == False:
                 if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-                    if obstacleMap[x, y]:  # Check if there's an obstacle
+                    if self.digitalMap[x, y] != obstacleMap[x, y] == True:  # Check if there's an obstacle
                         self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
-                        print("Found one")
-                        found = True
-                        break
+                        found = True 
                 err -= dx
                 if err < 0:
                     x += sx
