@@ -29,7 +29,7 @@ class Robot(Sphere):
         self.vision = float(kwargs.get('vision', self.radius * 6))
         self.tol = int(kwargs.get('tolerance', 2))
         self.direction = float(kwargs.get('radians', 0))
-        self.sensor_angle = float(kwargs.get('degrees', 45))
+        self.sensor_angle = float(kwargs.get('degrees', 90))
         self.path = []
 
     def addMap(self, mapShape):
@@ -45,16 +45,21 @@ class Robot(Sphere):
         leftDir  = self.direction + math.radians(self.sensor_angle)
         rightDir = self.direction - math.radians(self.sensor_angle)
         if self.mark_obstacles(obstacleMap, leftDir):
+            print("Found left")
             found = True
         if self.mark_obstacles(obstacleMap, self.direction):
+            print("Found center")
             found = True
         if self.mark_obstacles(obstacleMap, rightDir):
+            print("Found right")
             found = True
+        
+        print("Return")
         return found
     
     def mark_obstacles(self, obstacleMap, angle):
         found = False
-        (x, y) = self.coords
+        (x, y) = int(self.coords[0]), int(self.coords[1])
         (cx, cy) = (x + round(self.vision * np.cos(angle)), y + round(self.vision * np.sin(angle)))
 
         # Bresenham's Line Algorithm

@@ -97,13 +97,37 @@ class Lattice:
       Urep [rescaleD > self.safeDistance] = 0
       return Uatt + Urep
 
+#    def calcPath(self, start_coords, end_coords, max_its):
+#          [gy, gx] = np.gradient(-self.getPotential())
+#          route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
+#          for _ in range(max_its):
+#            current_point = route[-1,:]
+#            if self.robot.seekObstacles(self.obstacleMap):
+#                print("Found obs")
+#                [gy, gx] = np.gradient(-self.getPotential())
+#            if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
+#              print('Reached the goal !')
+#              break
+#
+#            ix = int(round( current_point[1] ))
+#            iy = int(round( current_point[0] ))
+#            vx = gx[ix, iy]
+#            vy = gy[ix, iy]
+#            dt = 1 / np.linalg.norm([vx, vy])
+#            self.robot.direction = np.arctan2(vx, vy)
+#            next_point = current_point + dt*np.array([vx, vy])
+#            route = np.vstack( [route, next_point] )
+#          route = route[1:,:]
+#          return route
+    
     def calcPath(self, start_coords, end_coords, max_its):
           [gy, gx] = np.gradient(-self.getPotential())
           route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
+          forces = [[gy, gx]]
           for _ in range(max_its):
             current_point = route[-1,:]
             if self.robot.seekObstacles(self.obstacleMap):
-                print("Found obs")
+                #print("Found obs")
                 [gy, gx] = np.gradient(-self.getPotential())
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
@@ -117,9 +141,10 @@ class Lattice:
             self.robot.direction = np.arctan2(vx, vy)
             next_point = current_point + dt*np.array([vx, vy])
             route = np.vstack( [route, next_point] )
+            forces.append([gy, gx])
           route = route[1:,:]
-          return route
-    
+          return route, forces
+
     def movePatches(self, ax):
         
         # Update the robot's position
@@ -133,10 +158,10 @@ class Lattice:
             ax.add_patch(self.robot_patch)
 
         #Update obstacles
-        (obsY, obsX) = np.where(self.robot.digitalMap == True)
-        for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
-            ax.add_patch(obstacle_patch)
+        #(obsY, obsX) = np.where(self.robot.digitalMap == True)
+        #for x, y in zip(obsX, obsY):
+        #    obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
+        #    ax.add_patch(obstacle_patch)
         
         # Update goals
         for goal in self.goals:
@@ -150,7 +175,7 @@ class Lattice:
       [fy, fx] = np.gradient(-self.getPotential())
       plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
       
-      self.movePatches(ax)
+      #self.movePatches(ax)
 
       return fig, ax
 
@@ -165,13 +190,15 @@ class Lattice:
 
         max_its: int
                  max number of Euler steps to generate (default 400)
+        
+
         """
         skip = kwargs.get('skip', 10)
         max_its = kwargs.get('max_its', 400)
         start = self.robot.coords
         goal = self.goals[0].coords
-        route = self.calcPath(start, goal, max_its)
-        self.drawFullForce(skip)
+        route, _ = self.calcPath(start, goal, max_its)
+        self.draw(skip)
         plt.plot(start[0], start[1], 'bo', markersize=10)
         plt.plot(goal[0], goal[1], 'go', markersize=10)
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
@@ -190,6 +217,9 @@ class Lattice:
 
         max_its: int
                  max number of Euler steps to generate (default 400)
+        
+        drop: int
+              number of discarded frames (default 1 [None])
         """
         skip = int(kwargs.get('skip', 10))
         max_its = kwargs.get('max_its', 400)
@@ -199,25 +229,37 @@ class Lattice:
         start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
-        path = self.calcPath(start_coords, self.goals[0].coords, max_its)
+        path, forces = self.calcPath(start_coords, self.goals[0].coords, max_its)
+
+        drop = kwargs.get('drop', 1)
 
         def generate():
           global stop
           stop = False
           for i in tqdm(range(len(path))):
-             yield i
+             if i % drop == 0:
+                yield i
 
         def update(i):
             global stop
-                
+            
+            ax.clear()
+
             if i < len(path):
                self.robot.coords = path[i]
             
-            self.movePatches(ax)
-            [gy, gx] = np.gradient(-self.getPotential())
-            quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], gx[::skip,::skip], gy[::skip,::skip], pivot = 'mid')
+            #self.movePatches(ax)
+
+            quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
+            vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            vy = forces[i][0][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            direction_vector = np.array([vx, vy])
+            
+            ax.arrow(self.robot.coords[0], self.robot.coords[1], direction_vector[0], direction_vector[1],
+                     head_width=5, head_length=5, fc='blue', ec='blue')
+            
             return quiver
-        
+
         matplotlib.rcParams['animation.embed_limit'] = 2**128
         ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False)
         writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
@@ -225,6 +267,8 @@ class Lattice:
         
         return HTML(ani.to_jshtml())
     
+
+
 
     def getWholePotential(self):
       if len(self.goals) > 0:
