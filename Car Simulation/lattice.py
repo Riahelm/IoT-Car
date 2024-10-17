@@ -132,14 +132,16 @@ class Lattice:
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
               break
-
-            ix = int(round( current_point[1] ))
-            iy = int(round( current_point[0] ))
+            ix = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
+            iy = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+            #ix = int(round( current_point[1] ))
+            #iy = int(round( current_point[0] ))
             vx = gx[ix, iy]
             vy = gy[ix, iy]
             dt = 1 / np.linalg.norm([vx, vy])
             self.robot.direction = np.arctan2(vx, vy)
             next_point = current_point + dt*np.array([vx, vy])
+            self.robot.coords = next_point
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
           route = route[1:,:]
@@ -161,7 +163,7 @@ class Lattice:
         (obsY, obsX) = np.where(self.obstacleMap == True)
         #(obsY, obsX) = np.where(self.robot.digitalMap == True)
         for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
+            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=1)  # Use self.robot.tol for the radius
             ax.add_patch(obstacle_patch)
         
         # Update goals
@@ -176,7 +178,7 @@ class Lattice:
       [fy, fx] = np.gradient(-self.getPotential())
       plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
       
-      #self.movePatches(ax)
+      self.movePatches(ax)
 
       return fig, ax
 
