@@ -158,10 +158,11 @@ class Lattice:
             ax.add_patch(self.robot_patch)
 
         #Update obstacles
+        (obsY, obsX) = np.where(self.obstacleMap == True)
         #(obsY, obsX) = np.where(self.robot.digitalMap == True)
-        #for x, y in zip(obsX, obsY):
-        #    obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
-        #    ax.add_patch(obstacle_patch)
+        for x, y in zip(obsX, obsY):
+            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=0.5)  # Use self.robot.tol for the radius
+            ax.add_patch(obstacle_patch)
         
         # Update goals
         for goal in self.goals:
@@ -248,7 +249,7 @@ class Lattice:
             if i < len(path):
                self.robot.coords = path[i]
             
-            #self.movePatches(ax)
+            self.movePatches(ax)
 
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
             vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]

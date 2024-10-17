@@ -28,8 +28,8 @@ class Robot(Sphere):
         super().__init__(float(kwargs.get('radius', 1)), coords)
         self.vision = float(kwargs.get('vision', self.radius * 6))
         self.tol = int(kwargs.get('tolerance', 2))
-        self.direction = float(kwargs.get('radians', 0))
-        self.sensor_angle = float(kwargs.get('degrees', 90))
+        self.direction = float(kwargs.get('direction', 0))
+        self.sensor_angle = float(kwargs.get('sensor_angle', 45))
         self.path = []
 
     def addMap(self, mapShape):
@@ -53,7 +53,8 @@ class Robot(Sphere):
         if self.mark_obstacles(obstacleMap, rightDir):
             print("Found right")
             found = True
-        
+        plt.imshow(self.digitalMap)
+        plt.show()
         print("Return")
         return found
     
