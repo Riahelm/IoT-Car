@@ -75,7 +75,13 @@ class Lattice:
         if isinstance(o, Obstacle) and 0 <= x < xs and 0 <= y < ys:
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
-       
+
+    def randomize(self):
+        #self.addRobot(Robot(1, (3, 3), 10))
+
+        for _ in range(25):
+            self.addObstacle(Obstacle(rd(5, 20), (rd(0, self.num_cols), rd(0, self.num_rows))))
+
     def genObs(self):
         self.obstacleMap [300:, 100:250] = True
         self.obstacleMap [150:200, 400:500] = True
@@ -96,56 +102,41 @@ class Lattice:
       Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
       Urep [rescaleD > self.safeDistance] = 0
       return Uatt + Urep
-
-#    def calcPath(self, start_coords, end_coords, max_its):
-#          [gy, gx] = np.gradient(-self.getPotential())
-#          route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
-#          for _ in range(max_its):
-#            current_point = route[-1,:]
-#            if self.robot.seekObstacles(self.obstacleMap):
-#                print("Found obs")
-#                [gy, gx] = np.gradient(-self.getPotential())
-#            if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
-#              print('Reached the goal !')
-#              break
-#
-#            ix = int(round( current_point[1] ))
-#            iy = int(round( current_point[0] ))
-#            vx = gx[ix, iy]
-#            vy = gy[ix, iy]
-#            dt = 1 / np.linalg.norm([vx, vy])
-#            self.robot.direction = np.arctan2(vx, vy)
-#            next_point = current_point + dt*np.array([vx, vy])
-#            route = np.vstack( [route, next_point] )
-#          route = route[1:,:]
-#          return route
     
     def calcPath(self, start_coords, end_coords, max_its):
           [gy, gx] = np.gradient(-self.getPotential())
           route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
           forces = [[gy, gx]]
+          coords = []
           for _ in range(max_its):
             current_point = route[-1,:]
-            if self.robot.seekObstacles(self.obstacleMap):
+            (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
+            if found:
                 #print("Found obs")
+                #if np.allclose((gy, gx), np.gradient(-self.getPotential())):
+                #    print("Error")
                 [gy, gx] = np.gradient(-self.getPotential())
+                # Gradient returns y-axis and then x-axis
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
               break
-            ix = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
-            iy = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
-            #ix = int(round( current_point[1] ))
-            #iy = int(round( current_point[0] ))
-            vx = gx[ix, iy]
-            vy = gy[ix, iy]
+            
+            # NumPy arrays access grids by (row, column) so it is inverted
+            row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
+            col = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+
+            vx = gx[row, col]
+            vy = gy[row, col]
             dt = 1 / np.linalg.norm([vx, vy])
-            self.robot.direction = np.arctan2(vx, vy)
             next_point = current_point + dt*np.array([vx, vy])
             self.robot.coords = next_point
+            self.robot.direction = np.arctan2(-vy, vx)
+            # y values go from top to bottom in NumPy arrays, need to negate to offset it
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
+            coords.append(coordsT)
           route = route[1:,:]
-          return route, forces
+          return route, forces, coords
 
     def movePatches(self, ax):
         
@@ -200,7 +191,7 @@ class Lattice:
         max_its = kwargs.get('max_its', 400)
         start = self.robot.coords
         goal = self.goals[0].coords
-        route, _ = self.calcPath(start, goal, max_its)
+        route, _, _ = self.calcPath(start, goal, max_its)
         self.draw(skip)
         plt.plot(start[0], start[1], 'bo', markersize=10)
         plt.plot(goal[0], goal[1], 'go', markersize=10)
@@ -208,6 +199,7 @@ class Lattice:
         plt.xlabel('X')
         plt.ylabel('Y')
         plt.show()
+        plt.close()
 
     def animate(self, **kwargs):
         """
@@ -232,14 +224,15 @@ class Lattice:
         start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
-        path, forces = self.calcPath(start_coords, self.goals[0].coords, max_its)
-
+        for i in range(len(self.goals)):
+            path, forces, coords = self.calcPath(start_coords, self.goals[0].coords, max_its)
+        
         drop = kwargs.get('drop', 1)
-
+        
         def generate():
           global stop
           stop = False
-          for i in tqdm(range(len(path))):
+          for i in tqdm(range(len(path) - 1)):
              if i % drop == 0:
                 yield i
 
@@ -249,13 +242,19 @@ class Lattice:
             ax.clear()
 
             if i < len(path):
-               self.robot.coords = path[i]
+                self.robot.coords = path[i]
+                for obs_coords in coords[i]:
+                    if obs_coords:
+                        (x_vals, y_vals) = zip(*obs_coords)
+                        plt.plot(x_vals, y_vals, 'g--')
+
             
             self.movePatches(ax)
 
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
             vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
             vy = forces[i][0][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            
             direction_vector = np.array([vx, vy])
             
             ax.arrow(self.robot.coords[0], self.robot.coords[1], direction_vector[0], direction_vector[1],
@@ -265,7 +264,7 @@ class Lattice:
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
         ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False)
-        writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
+        writervideo = matplotlib.animation.FFMpegWriter(fps = 1)
         ani.save('Car.mp4', writer = writervideo)
         
         return HTML(ani.to_jshtml())

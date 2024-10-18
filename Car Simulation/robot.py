@@ -29,7 +29,7 @@ class Robot(Sphere):
         super().__init__(float(kwargs.get('radius', 1)), coords)
         self.vision = float(kwargs.get('vision', self.radius * 6))
         self.tol = int(kwargs.get('tolerance', 2))
-        self.direction = float(kwargs.get('direction', 0)) % 360
+        self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
         self.sensor_angle = float(kwargs.get('sensor_angle', 45))
         self.path = []
 
@@ -43,32 +43,43 @@ class Robot(Sphere):
 
     def seekObstacles(self, obstacleMap):
         found = False
-        leftDir  = math.radians(self.direction + self.sensor_angle)
-        rightDir = math.radians(self.direction - self.sensor_angle)
-        if self.mark_obstacles(obstacleMap, leftDir):
+        leftDir  = self.direction + np.radians(self.sensor_angle)
+        rightDir = self.direction - np.radians(self.sensor_angle)
+        #print(leftDir)
+        #print(self.direction)
+        #print(rightDir)
+        #print("-----")
+        coords = []
+        (foundT, coordsL) = self.mark_obstacles(obstacleMap, leftDir)
+        if foundT:
             #print("Found left")
             found = True
-        if self.mark_obstacles(obstacleMap, self.direction):
+        (foundT, coordsC) = self.mark_obstacles(obstacleMap, self.direction)
+        if foundT:
             #print("Found center")
             found = True
-        if self.mark_obstacles(obstacleMap, rightDir):
+        (foundT, coordsR) = self.mark_obstacles(obstacleMap, rightDir)
+        if foundT:
             #print("Found right")
             found = True
-        return found
+        coords.append(coordsL)
+        coords.append(coordsC)
+        coords.append(coordsR)
+        return found, coords
     
     def mark_obstacles(self, obstacleMap, angle):
         found = False
-        x0, y0 = int(self.coords[1]), int(self.coords[0])
-        x1, y1 = (x0 + round(self.vision * np.cos(angle)), y0 + round(self.vision * np.sin(angle)))
-        #print(f"Marking from: {x0, y0}, to {x1, y1}" )
+        x0, y0 = int(self.coords[0]), int(self.coords[1])
+        x1, y1 = (x0 + round(self.vision * np.cos(angle)), y0 - round(self.vision * np.sin(angle)))
+        coords = []
         for (x, y) in bresenham((x0, y0), (x1, y1)):
-            if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1] and obstacleMap[x, y]:
-            #if obstacleMap[x, y]: #and not self.digitalMap[x, y]:
-                #print(f"Found here: {x},{y}")
-                self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
+            coords.append((x, y))
+            if 0 <= x < obstacleMap.shape[1] and 0 <= y < obstacleMap.shape[0] \
+                and obstacleMap[y, x] and not self.digitalMap[y, x]:
+                self.digitalMap[y - self.tol : y + self.tol, x - self.tol : x + self.tol] = True
                 found = True                 
                 break
-        return found
+        return found, coords
     
 
 
