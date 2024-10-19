@@ -31,7 +31,7 @@ class Robot(Sphere):
         self.tol = int(kwargs.get('tolerance', 2))
         self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
         self.sensor_angle = float(kwargs.get('sensor_angle', 45))
-        self.path = []
+        self.path = [self.coords]
 
     def addMap(self, mapShape):
         if len(mapShape) != 2:
@@ -39,28 +39,26 @@ class Robot(Sphere):
         self.digitalMap = np.zeros(mapShape)
 
     def isStuck(self) -> bool:
-        return False
+        res = False
+        if self.path[0] == self.path[-1]:
+            res = True
+        self.path.pop()
+        return res
 
     def seekObstacles(self, obstacleMap):
         found = False
         leftDir  = self.direction + np.radians(self.sensor_angle)
         rightDir = self.direction - np.radians(self.sensor_angle)
-        #print(leftDir)
-        #print(self.direction)
-        #print(rightDir)
-        #print("-----")
+
         coords = []
         (foundT, coordsL) = self.mark_obstacles(obstacleMap, leftDir)
         if foundT:
-            #print("Found left")
             found = True
         (foundT, coordsC) = self.mark_obstacles(obstacleMap, self.direction)
         if foundT:
-            #print("Found center")
             found = True
         (foundT, coordsR) = self.mark_obstacles(obstacleMap, rightDir)
         if foundT:
-            #print("Found right")
             found = True
         coords.append(coordsL)
         coords.append(coordsC)
@@ -80,42 +78,3 @@ class Robot(Sphere):
                 found = True                 
                 break
         return found, coords
-    
-
-
-    #def mark_obstacles(self, obstacleMap, angle):
-    #    found = False
-    #    (x, y) = int(self.coords[0]), int(self.coords[1])
-    #    (cx, cy) = (x + round(self.vision * np.cos(angle)), y + round(self.vision * np.sin(angle)))
-#
-    #    # Bresenham's Line Algorithm
-    #    dx = abs(cx - x)
-    #    dy = abs(cy - y)
-    #    sx = 1 if x < cx else -1
-    #    sy = 1 if y < cy else -1
-    #    if dx > dy:
-    #        err = dx / 2.0
-    #        while x != cx and found == False:
-    #            if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-    #                if obstacleMap[x, y] and not self.digitalMap[x, y]:  # Check if there's an obstacle
-    #                    self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
-    #                    found = True
-    #            err -= dy
-    #            if err < 0:
-    #                y += sy
-    #                err += dx
-    #            x += sx
-    #    else:
-    #        err = dy / 2.0
-    #        while y != cy and found == False:
-    #            if 0 <= x < obstacleMap.shape[0] and 0 <= y < obstacleMap.shape[1]:
-    #                if obstacleMap[x, y] and not self.digitalMap[x, y]:  # Check if there's an obstacle
-    #                    self.digitalMap[x - self.tol : x + self.tol, y - self.tol : y + self.tol] = True
-    #                    found = True 
-    #            err -= dx
-    #            if err < 0:
-    #                x += sx
-    #                err += dy
-    #            y += sy
-    #    return found
-    
