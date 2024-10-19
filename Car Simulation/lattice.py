@@ -96,25 +96,27 @@ class Lattice:
       if len(self.goals) > 0:
           g = self.goals[0].coords
           Uatt = self.goalAttraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
-
+    
       d = bwdist(self.robot.digitalMap==0)
       rescaleD = (d/100.) + 1
       Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
       Urep [rescaleD > self.safeDistance] = 0
       return Uatt + Urep
     
+    def getForces(self):
+        return np.gradient(-self.getPotential())
+    
+
     def calcPath(self, start_coords, end_coords, max_its):
-          [gy, gx] = np.gradient(-self.getPotential())
+          [gy, gx] = self.getForces()
           route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
           forces = [[gy, gx]]
           coords = []
           for _ in range(max_its):
             current_point = route[-1,:]
             (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
-            if self.robot.isStuck():
-                self.obstacleMap[current_point] = True
             if found:
-                [gy, gx] = np.gradient(-self.getPotential())
+                [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
 
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
@@ -133,6 +135,8 @@ class Lattice:
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
+            if self.robot.isStuck():
+                self.robot.digitalMap[row, col] = True
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
             coords.append(coordsT)
@@ -199,7 +203,7 @@ class Lattice:
         fig, ax = plt.subplots(figsize=figsize)
 
         # Calculate the gradients of the potential field
-        [fy, fx] = np.gradient(-self.getPotential())
+        [fy, fx] = self.getForces()
 
         # Plot the quiver plot, skipping elements as specified
         plt.quiver(self.X[::skip, ::skip], self.Y[::skip, ::skip], fx[::skip, ::skip], fy[::skip, ::skip], pivot='mid')
