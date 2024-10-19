@@ -11,7 +11,7 @@ from goal import Goal
 from obstacle import Obstacle 
 
 class Lattice:
-    def __init__(self, columns: int, rows: int, robot: Robot, goal: Goal, **kwargs):
+    def __init__(self, rows: int, columns: int, robot: Robot, goal: Goal, **kwargs):
         """
         APF-Enriched Lattice
         Mandatory parameters
@@ -79,8 +79,8 @@ class Lattice:
     def randomize(self):
         #self.addRobot(Robot(1, (3, 3), 10))
 
-        for _ in range(25):
-            self.addObstacle(Obstacle(rd(5, 20), (rd(0, self.num_cols), rd(0, self.num_rows))))
+        for _ in range(20):
+            self.addObstacle(Obstacle(rd(5, 10), (rd(0, self.num_cols), rd(0, self.num_rows))))
 
     def genObs(self):
         self.obstacleMap [300:, 100:250] = True
@@ -165,13 +165,48 @@ class Lattice:
             ax.add_patch(goal.patch)
 
     def draw(self, skip):
-      fig, ax = plt.subplots(figsize=(12, 8))
-      [fy, fx] = np.gradient(-self.getPotential())
-      plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
-      
-      self.movePatches(ax)
+        # Get the screen dimensions in pixels and DPI (dots per inch)
+        manager = plt.get_current_fig_manager()
+        screen_width_px = manager.canvas.get_width_height()[0]
+        screen_height_px = manager.canvas.get_width_height()[1]
+        
+        # Get screen DPI
+        dpi = plt.rcParams['figure.dpi']
+        
+        # Convert screen size to inches
+        screen_width_in = screen_width_px / dpi
+        screen_height_in = screen_height_px / dpi
 
-      return fig, ax
+        # Calculate the number of rows and columns in the lattice
+        num_rows, num_cols = self.X.shape
+        
+        # Target figure size to be a percentage of the screen size
+        width_ratio = 0.8  # Use 80% of the screen width
+        height_ratio = 0.8  # Use 80% of the screen height
+
+        # Calculate scale factors for both width and height
+        scale_factor_x = (screen_width_in * width_ratio) / num_cols
+        scale_factor_y = (screen_height_in * height_ratio) / num_rows
+
+        # Use the smaller of the two scale factors to ensure the figure fits on the screen
+        scale_factor = min(scale_factor_x, scale_factor_y)
+
+        # Set figsize proportional to the grid size, adjusted by the scale factor
+        figsize = (num_cols * scale_factor, num_rows * scale_factor)
+
+        # Create the figure with the calculated figsize
+        fig, ax = plt.subplots(figsize=figsize)
+
+        # Calculate the gradients of the potential field
+        [fy, fx] = np.gradient(-self.getPotential())
+
+        # Plot the quiver plot, skipping elements as specified
+        plt.quiver(self.X[::skip, ::skip], self.Y[::skip, ::skip], fx[::skip, ::skip], fy[::skip, ::skip], pivot='mid')
+
+        # Move patches to the axes (for robot, obstacles, etc.)
+        self.movePatches(ax)
+
+        return fig, ax
 
     def plotPath(self, **kwargs):
         """
@@ -224,8 +259,7 @@ class Lattice:
         start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
-        for i in range(len(self.goals)):
-            path, forces, coords = self.calcPath(start_coords, self.goals[0].coords, max_its)
+        path, forces, coords = self.calcPath(start_coords, self.goals[0].coords, max_its)
         
         drop = kwargs.get('drop', 1)
         
@@ -264,7 +298,7 @@ class Lattice:
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
         ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False)
-        writervideo = matplotlib.animation.FFMpegWriter(fps = 1)
+        writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
         ani.save('Car.mp4', writer = writervideo)
         
         return HTML(ani.to_jshtml())
