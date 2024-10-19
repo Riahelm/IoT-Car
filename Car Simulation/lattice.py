@@ -111,12 +111,12 @@ class Lattice:
           for _ in range(max_its):
             current_point = route[-1,:]
             (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
+            if self.robot.isStuck():
+                self.obstacleMap[current_point] = True
             if found:
-                #print("Found obs")
-                #if np.allclose((gy, gx), np.gradient(-self.getPotential())):
-                #    print("Error")
                 [gy, gx] = np.gradient(-self.getPotential())
                 # Gradient returns y-axis and then x-axis
+
             if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
               print('Reached the goal !')
               break
@@ -129,6 +129,7 @@ class Lattice:
             vy = gy[row, col]
             dt = 1 / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
+            self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
