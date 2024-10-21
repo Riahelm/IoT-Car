@@ -38,10 +38,6 @@ class Robot(Sphere):
             raise ValueError
         self.digitalMap = np.zeros(mapShape)
 
-    def isStuck(self) -> bool:
-        res = False
-        return res
-
     def seekObstacles(self, obstacleMap):
         found = False
         leftDir  = self.direction + np.radians(self.sensor_angle)
