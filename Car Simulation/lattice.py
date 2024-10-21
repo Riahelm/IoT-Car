@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation
 from   IPython.display import HTML 
-from scipy.ndimage import distance_transform_edt as bwdist
+from   scipy.ndimage import distance_transform_edt as bwdist
 from   random import randint as rd
-from tqdm.auto import tqdm
+from   tqdm.auto import tqdm
 
 from robot import Robot 
 from goal import Goal 
@@ -30,13 +30,13 @@ class Lattice:
 
         Optional parameters
         -------------------
-        goalAttraction: float
+        goal_attraction: float
                         attraction multiplier of the goals (default 1/700)
                         
-        obstacleRepulsion: float
+        obstacle_repulsion: float
                            repulsion multiplier of the obstacles (default 800)
         
-        safeDistance: float
+        safe_distance: float
                       mandatory distance of the robot to the obstacles (default is the robot's diameter)
         """
         if not isinstance(rows, int):
@@ -61,9 +61,9 @@ class Lattice:
         self.Fy = np.zeros_like(self.Y, dtype=float)
         self.goals = [goal]
         self.obstacleMap = np.zeros_like(self.X, dtype=bool)
-        self.goalAttraction = float(kwargs.get('goalAttraction', 1/700.))
-        self.obstacleRepulsion = float(kwargs.get('obstacleRepulsion', 800))
-        self.safeDistance = float(kwargs.get('safeDistance', robot.radius * 2))
+        self.goal_attraction = float(kwargs.get('goal_attraction', 1/700.))
+        self.obstacle_repulsion = float(kwargs.get('obstacle_repulsion', 800))
+        self.safe_distance = float(kwargs.get('safe_distance', robot.radius * 2))
 
     def addGoal(self, g):
         if isinstance(g, Goal):
@@ -95,12 +95,12 @@ class Lattice:
     def getPotential(self):
       if len(self.goals) > 0:
           g = self.goals[0].coords
-          Uatt = self.goalAttraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
+          Uatt = self.goal_attraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
     
       d = bwdist(self.robot.digitalMap==0)
       rescaleD = (d/100.) + 1
-      Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
-      Urep [rescaleD > self.safeDistance] = 0
+      Urep = self.obstacle_repulsion * ((1./rescaleD - 1/self.safe_distance)**2)
+      Urep [rescaleD > self.safe_distance] = 0
       return Uatt + Urep
     
     def getForces(self):
@@ -309,17 +309,17 @@ class Lattice:
         return HTML(ani.to_jshtml())
     
 
-
-
+    
+    ## DEBUGGING METHODS ##
     def getWholePotential(self):
       if len(self.goals) > 0:
           g = self.goals[0].coords
-          Uatt = self.goalAttraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
+          Uatt = self.goal_attraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
 
       d = bwdist(self.obstacleMap==0)
       rescaleD = (d/100.) + 1
-      Urep = self.obstacleRepulsion * ((1./rescaleD - 1/self.safeDistance)**2)
-      Urep [rescaleD > self.safeDistance] = 0
+      Urep = self.obstacle_repulsion * ((1./rescaleD - 1/self.safe_distance)**2)
+      Urep [rescaleD > self.safe_distance] = 0
       return Uatt + Urep
     
     def drawFullForce(self, skip):
