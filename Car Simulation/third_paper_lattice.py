@@ -37,7 +37,7 @@ class Third_Paper_Lattice (Lattice):
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
-            if self.robot.isStuck(self.getPotential()):
+            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
