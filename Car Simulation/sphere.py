@@ -1,9 +1,9 @@
 from util import getDistanceFromCoordinate
-
+import numpy as np
 class Sphere:
     def __init__(self, radius, coords):
         self.radius = radius
-        self.coords = coords[::-1]
+        self.coords = np.array([coords[0], coords[1]])
 
     def get_distance(self, x, y) -> float:
         return getDistanceFromCoordinate(self.coords[0], self.coords[1], x, y)
