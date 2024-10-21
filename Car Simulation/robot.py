@@ -40,9 +40,6 @@ class Robot(Sphere):
 
     def isStuck(self) -> bool:
         res = False
-        #if np.array_equal(self.path[0], self.path[-1]):
-        #    res = True
-        #self.path.pop()
         return res
 
     def seekObstacles(self, obstacleMap):
