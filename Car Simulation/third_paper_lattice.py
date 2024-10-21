@@ -21,7 +21,7 @@ class Third_Paper_Lattice (Lattice):
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
 
-            if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
+            if self.goals[0].isTouching(self.robot):
                 print('Reached the goal !')
                 break
             
