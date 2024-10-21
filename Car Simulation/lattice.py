@@ -135,8 +135,6 @@ class Lattice:
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
-            if self.robot.isStuck():
-                self.robot.digitalMap[row, col] = True
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
             coords.append(coordsT)
