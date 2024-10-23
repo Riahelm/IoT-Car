@@ -17,13 +17,9 @@ uint8_t rightMotorPins[4]   = {MOTORSTEP_R_1, MOTORSTEP_R_2, MOTORSTEP_R_3, MOTO
 uint8_t sensorPins[3]       = {DIST_L_ECHO, DIST_C_ECHO, DIST_R_ECHO};
 uint8_t triggerPin          = DIST_TRIG;
 
-#ifdef IS_REAL
-  PhysicalSteppers *motors;
-  DistanceSens *sensors;
-#else
-  SimulatedSteppers *motors;
-  //SimulatedDistanceSens *sensors;
-#endif
+PhysicalSteppers *motors;
+DistanceSens *sensors;
+
 
 
 void setup() {
@@ -66,6 +62,5 @@ void setupSensors(){
 }
 
 void loop() {
-  motors->turnLeft(360);
   while(true);
 }
