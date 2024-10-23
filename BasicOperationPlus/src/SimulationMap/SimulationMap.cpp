@@ -1,4 +1,4 @@
-
+/*
 #include "SimulationMap.h"
 
 SimulationMap::SimulationMap(uint16_t size, uint8_t scale, uint16_t posX, uint16_t posY)
@@ -15,4 +15,4 @@ SimulationMap::SimulationMap(const char (&map)[10][10], uint8_t scale)
         }
     }
     this->scale = scale;
-}
+}*/
