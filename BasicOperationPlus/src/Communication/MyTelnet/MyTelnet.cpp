@@ -1,7 +1,6 @@
 #include "MyTelnet.h"
 
 static ESPTelnet telnet;
-static SimulationMap *telMap = nullptr;
 static AbstractSteppers *telStep;
 static DistanceSens *telSens;
 
@@ -75,7 +74,6 @@ void printError(String);
 
 void setSteppers(AbstractSteppers *steppers)   {telStep = steppers;}
 void setSensors (DistanceSens *sensors){telSens = sensors;}
-void setMap(SimulationMap *map){telMap = map;}
 
 void initTelnet(void){   
 
@@ -233,13 +231,13 @@ void parsers::PingRight(String param){
 }
 
  void parsers::PrintMap(String param){
-    if(param.length() == 0 && telMap != nullptr){
+    if(param.length() == 0){
         uint16_t len = 10;
         for (uint16_t i = 0; i < len; i++){
             for (uint16_t j = 0; j < len; i++){
-                telnet.print(telMap->grid[i][j]);
+                //telnet.print("");
             }
-            telnet.println();
+            //telnet.println();
         }
     }
  }
@@ -247,16 +245,15 @@ void parsers::PingRight(String param){
 void parsers::GoTo(String param){
     using namespace std;
     tuple<String, String> splitParam = splitFunc(param);
-    uint16_t x = get<0>(splitParam);
-    uint16_t y = get<1>(splitParam);
+    uint16_t x = get<0>(splitParam).toInt();
+    uint16_t y = get<1>(splitParam).toInt();
 
     if(-4000 < x < 4000 && -4000 < y < 4000){
-        uint16_t turnAngleDeg = uint16_t(atan2(x, y) * (180 / PI))
+        uint16_t turnAngleDeg = uint16_t(atan2(x, y) * (180 / PI));
         /* Steppers automatically adjust if degrees are negative */
         telStep->turnLeft(uint16_t(std::abs(turnAngleDeg)));
         /* Steppers automatically adjust if degrees are positive */
         telStep->goForwards( x * 10);
-        y = 0
         //sensors = new DistanceSens(triggerPin, 3, sensorPins, 20);  /* Create sensor  object */
         //thread sensorT(&DistanceSens::start, sensors);         /* Create sensor  thread */
         //sensorT.detach();                                           /* Allows for thread to run independently from setup() */
