@@ -1,2 +1,8 @@
+#ifndef DISTANCE_H
+#define DISTANCE_H
 
-uint16_t getDistanceFromCoordinate(float x, float y, float x2, float y2);
+#include "Arduino.h"
+
+double getDistanceFromCoordinate(uint16_t x, uint16_t y, uint16_t x2, uint16_t y2);
+
+#endif
