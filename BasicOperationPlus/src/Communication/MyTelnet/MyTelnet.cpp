@@ -1,4 +1,3 @@
-
 #include "MyTelnet.h"
 
 static ESPTelnet telnet;
@@ -177,7 +176,7 @@ void parsers::GoForward(String param){
     }else{
         telnet.println("Parameter error. Parameter must be a natural number lower than 4000.");
     }
-};
+}
 
 void parsers::GoBackward(String param){
     /* Turn parameter into usable data */ 
@@ -246,7 +245,22 @@ void parsers::PingRight(String param){
  }
 
 void parsers::GoTo(String param){
-    //TBD 
+    using namespace std;
+    tuple<String, String> splitParam = splitFunc(param);
+    uint16_t x = get<0>(splitParam);
+    uint16_t y = get<1>(splitParam);
+
+    if(-4000 < x < 4000 && -4000 < y < 4000){
+        uint16_t turnAngleDeg = uint16_t(atan2(x, y) * (180 / PI))
+        /* Steppers automatically adjust if degrees are negative */
+        telStep->turnLeft(uint16_t(std::abs(turnAngleDeg)));
+        /* Steppers automatically adjust if degrees are positive */
+        telStep->goForwards( x * 10);
+        y = 0
+        //sensors = new DistanceSens(triggerPin, 3, sensorPins, 20);  /* Create sensor  object */
+        //thread sensorT(&DistanceSens::start, sensors);         /* Create sensor  thread */
+        //sensorT.detach();                                           /* Allows for thread to run independently from setup() */
+    }
 }
 
 void parsers::Disconnect(String param){
