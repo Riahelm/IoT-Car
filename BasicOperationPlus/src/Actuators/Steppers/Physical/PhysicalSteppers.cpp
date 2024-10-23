@@ -24,70 +24,84 @@ PhysicalSteppers::~PhysicalSteppers(){};
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void PhysicalSteppers::_goForwards(uint16_t millimeters){
-    uint8_t count;
-    uint16_t bound = _mmToSteps(millimeters);
-    for (uint16_t i = 0; i < bound; i++){
-        count = i % 4;
-        digitalWrite(_pinsSx[count], HIGH);
-        digitalWrite(_pinsDx[count], HIGH);
-        delay(this->_speed);
-        digitalWrite(_pinsSx[count], LOW);
-        digitalWrite(_pinsDx[count], LOW);
-        delay(this->_speed);
-    };
-
-    _lowPins();
+    if (millimeters < 0){
+        _goBackwards(-millimeters);
+    } else{
+        uint8_t count;
+        uint16_t bound = _mmToSteps(millimeters);
+        for (uint16_t i = 0; i < bound; i++){
+            count = i % 4;
+            digitalWrite(_pinsSx[count], HIGH);
+            digitalWrite(_pinsDx[count], HIGH);
+            delay(this->_speed);
+            digitalWrite(_pinsSx[count], LOW);
+            digitalWrite(_pinsDx[count], LOW);
+            delay(this->_speed);
+        };
+        _lowPins();
+    }
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void PhysicalSteppers::_goBackwards(uint16_t millimeters){
-    uint8_t count;
-    uint16_t bound = _mmToSteps(millimeters);
-    for (uint16_t i = 0; i < bound; i++){
-        count = i % 4;
-        digitalWrite(_pinsSx[3 - count], HIGH);
-        digitalWrite(_pinsDx[3 - count], HIGH);
-        delay(this->_speed);
-        digitalWrite(_pinsSx[3 - count], LOW);
-        digitalWrite(_pinsDx[3 - count], LOW);
-        delay(this->_speed);
-    };
-
-    _lowPins();
+    if (millimeters < 0){
+        _goForwards(-millimeters);
+    } else{
+        uint8_t count;
+        uint16_t bound = _mmToSteps(millimeters);
+        for (uint16_t i = 0; i < bound; i++){
+            count = i % 4;
+            digitalWrite(_pinsSx[3 - count], HIGH);
+            digitalWrite(_pinsDx[3 - count], HIGH);
+            delay(this->_speed);
+            digitalWrite(_pinsSx[3 - count], LOW);
+            digitalWrite(_pinsDx[3 - count], LOW);
+            delay(this->_speed);
+        };
+        _lowPins();
+    }
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void PhysicalSteppers::_turnLeft(uint16_t degrees){
-    uint8_t count;
-    uint16_t bound = _degreesToSteps(degrees)/2;
-    for (uint16_t i = 0; i < bound; i++){
-        count = i % 4;
-        digitalWrite(_pinsSx[3 - count], HIGH);
-        digitalWrite(_pinsDx[count], HIGH);
-        delay(this->_speed);
-        digitalWrite(_pinsSx[3 - count], LOW);
-        digitalWrite(_pinsDx[count], LOW);
-        delay(this->_speed);
-    };
+    if (degrees < 0){
+        _turnRight(-degrees);
+    } else{
+        uint8_t count;
+        uint16_t bound = _degreesToSteps(degrees)/2;
+        for (uint16_t i = 0; i < bound; i++){
+            count = i % 4;
+            digitalWrite(_pinsSx[3 - count], HIGH);
+            digitalWrite(_pinsDx[count], HIGH);
+            delay(this->_speed);
+            digitalWrite(_pinsSx[3 - count], LOW);
+            digitalWrite(_pinsDx[count], LOW);
+            delay(this->_speed);
+        };
 
-    _lowPins();
+        _lowPins();
+    }
 };
 
 /* Function that isn't to be called by another thread, actually acts on the motors */
 void PhysicalSteppers::_turnRight(uint16_t degrees){
-    uint8_t count;
-    uint16_t bound = _degreesToSteps(degrees)/2;
-    for (uint16_t i = 0; i < bound; i++){
-        count = i % 4;
-        digitalWrite(_pinsSx[count], HIGH);
-        digitalWrite(_pinsDx[3 - count], HIGH);
-        delay(this->_speed);
-        digitalWrite(_pinsSx[count], LOW);
-        digitalWrite(_pinsDx[3 - count], LOW);
-        delay(this->_speed);
-    };
+    if (degrees < 0){
+        _turnLeft(-degrees);
+    } else{
+        uint8_t count;
+        uint16_t bound = _degreesToSteps(degrees)/2;
+        for (uint16_t i = 0; i < bound; i++){
+            count = i % 4;
+            digitalWrite(_pinsSx[count], HIGH);
+            digitalWrite(_pinsDx[3 - count], HIGH);
+            delay(this->_speed);
+            digitalWrite(_pinsSx[count], LOW);
+            digitalWrite(_pinsDx[3 - count], LOW);
+            delay(this->_speed);
+        };
 
-    _lowPins();
+        _lowPins();
+    }
 };
 
 /* Utility function to lower all pins */
