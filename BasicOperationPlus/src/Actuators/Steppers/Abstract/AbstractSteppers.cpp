@@ -27,6 +27,11 @@ void AbstractSteppers::start(){
     }
 }
 
+bool AbstractSteppers::isFinished(void)
+{
+    return this->_instructions.size() == 0;
+}
+
 /* Function to convert a number to the respective stepper instruction, returns nullptr if num isn't convertible */
 AbstractSteppers::StepInstr *AbstractSteppers::uintToStepInstr(uint8_t num)
 {   

@@ -27,6 +27,7 @@ class AbstractSteppers{
 
         /* Function starts the connection to the motors. Best utilized as a thread                    */
         void start(void); 
+        bool isFinished(void);
         /* Used to distinguish the instructions          */
         enum StepInstr {GoForwards, GoBackwards, TurnLeft, TurnRight}; 
         /* Function to convert an integer into a stepper instruction, returns NULL if value is not assignable */
