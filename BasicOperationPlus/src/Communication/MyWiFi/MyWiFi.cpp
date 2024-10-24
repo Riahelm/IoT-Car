@@ -37,9 +37,15 @@ void setupWiFi(String ssid, String password){
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
 
-    /* Stop blinking in order to show connection either timed out or was succesfull */
+    /* Stop blinking in order to show connection either timed out or was succesful */
     led.stopBlink();
     builtIn.join();
+}
+
+void stopWiFi(void)
+{
+    WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
 }
 
 bool isConnected(void)

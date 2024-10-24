@@ -13,6 +13,10 @@
 
 /* Function used to connect to a network, has default values settable above */
 void setupWiFi(String = DEFAULT_WIFI_SSID, String = DEFAULT_WIFI_PASSWORD);     
+
+/* Stops WiFi to use pins without issue; setupWiFi required for restarting driver */
+void stopWiFi(void);
+
 /* Function used to check if device is connected to a network */
 bool isConnected(void);
 
