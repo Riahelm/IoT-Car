@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation
+from typing import override
 from   IPython.display import HTML 
 from   scipy.ndimage import distance_transform_edt as bwdist
 from   random import randint as rd
 from   tqdm.auto import tqdm
 
-from robot import Robot 
+from robot import * 
 from goal import Goal 
 from obstacle import Obstacle 
 
@@ -107,9 +108,9 @@ class Lattice:
         return np.gradient(-self.getPotential())
     
 
-    def calcPath(self, start_coords, end_coords, max_its):
+    def calcPath(self, max_its):
           [gy, gx] = self.getForces()
-          route = np.vstack( [np.array(start_coords), np.array(start_coords)] )
+          route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
           forces = [[gy, gx]]
           coords = []
           for _ in range(max_its):
@@ -119,9 +120,9 @@ class Lattice:
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
 
-            if sum( abs(current_point-end_coords) ) < self.goals[0].radius:
-              print('Reached the goal !')
-              break
+            if self.goals[0].isTouching(self.robot):
+                print('Reached the goal !')
+                break
             
             # NumPy arrays access grids by (row, column) so it is inverted
             row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
@@ -229,7 +230,7 @@ class Lattice:
         max_its = kwargs.get('max_its', 400)
         start = self.robot.coords
         goal = self.goals[0].coords
-        route, _, _ = self.calcPath(start, goal, max_its)
+        route, _, _ = self.calcPath(max_its)
         self.draw(skip)
         plt.plot(start[0], start[1], 'bo', markersize=10)
         plt.plot(goal[0], goal[1], 'go', markersize=10)
@@ -262,7 +263,7 @@ class Lattice:
         start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
-        path, forces, coords = self.calcPath(start_coords, self.goals[0].coords, max_its)
+        path, forces, coords = self.calcPath(max_its)
         
         drop = kwargs.get('drop', 1)
         
@@ -329,4 +330,67 @@ class Lattice:
       plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
       self.movePatches(ax)
 
+
+
+class Second_Paper_Lattice(Lattice):
+    def __init__(self, rows: int, columns: int, robot: Robot, goal: Goal, **kwargs):
+        self.kV = kwargs.get('virtual_repulsion', 800)
+        super().__init__(rows, columns, robot, goal, **kwargs)
+
+    def getPotential(self):
+      if len(self.goals) > 0:
+          g = self.goals[0].coords
+          Uatt = self.goal_attraction * ((self.X - g[0])**2 + (self.Y - g[1])**2)
     
+      d = bwdist(self.robot.digitalMap==0)
+      rescaleD = (d/100.) + 1
+      Urep = self.obstacle_repulsion * ((1./rescaleD - 1/self.safe_distance)**2)
+      Uvir = self.kV / rescaleD
+      Urep [rescaleD > self.safe_distance] = 0
+      Uvir [rescaleD > self.safe_distance] = 0
+      return Uatt + Urep + Uvir
+    
+
+
+class Third_Paper_Lattice (Lattice):
+    def __init__(self, rows: int, columns: int, robot: Third_Paper_Robot, goal: Goal, **kwargs):
+        super().__init__(rows, columns, robot, goal, **kwargs)
+
+    @override
+    def calcPath(self, max_its):
+        [gy, gx] = self.getForces()
+        route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
+        forces = [[gy, gx]]
+        coords = []
+        for _ in range(max_its):
+            current_point = route[-1,:]
+            (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
+            if found:
+                [gy, gx] = self.getForces()
+                # Gradient returns y-axis and then x-axis
+
+            if self.goals[0].isTouching(self.robot):
+                print('Reached the goal !')
+                break
+            
+            # NumPy arrays access grids by (row, column) so it is inverted
+            row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
+            col = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+
+            vx = gx[row, col]
+            vy = gy[row, col]
+            dt = 1 / np.linalg.norm([vx, vy])
+            next_point = current_point + dt*np.array([vx, vy])
+            self.robot.path.insert(0, next_point)
+            self.robot.coords = next_point
+            self.robot.direction = np.arctan2(-vy, vx)
+            # y values go from top to bottom in NumPy arrays, need to negate to offset it
+            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
+                print("Got stuck")
+                self.robot.digitalMap[row, col] = True
+                [gy, gx] = self.getForces()
+            route = np.vstack( [route, next_point] )
+            forces.append([gy, gx])
+            coords.append(coordsT)
+        route = route[1:,:]
+        return route, forces, coords
