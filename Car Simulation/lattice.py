@@ -6,7 +6,6 @@ from   IPython.display import HTML
 from   scipy.ndimage import distance_transform_edt as bwdist
 from   random import randint as rd
 from   tqdm.auto import tqdm
-
 from robot import * 
 from goal import Goal 
 from obstacle import Obstacle 
@@ -258,9 +257,6 @@ class Lattice:
         skip = int(kwargs.get('skip', 10))
         max_its = kwargs.get('max_its', 400)
         fig, ax = self.draw(skip)
-
-        # Define the robot's start and end coordinates
-        start_coords = self.robot.coords
     
         # Calculate the path from the robot's start to the goal using calcPath
         path, forces, coords = self.calcPath(max_its)
@@ -304,7 +300,7 @@ class Lattice:
             return [quiver]
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
-        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False, blit = True, repeat = False)
+        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False)
         writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
         ani.save('Car.mp4', writer = writervideo)
         
@@ -394,3 +390,119 @@ class Third_Paper_Lattice (Lattice):
             coords.append(coordsT)
         route = route[1:,:]
         return route, forces, coords
+    
+class Polygon_Lattice(Third_Paper_Lattice):
+    def __init__(self, rows: int, columns: int, robot: Polygon_Robot, goal: Goal, **kwargs):
+        super().__init__(rows, columns, robot, goal, **kwargs)
+
+    @override
+    def calcPath(self, max_its):
+        [gy, gx] = self.getForces()
+        route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
+        forces = [[gy, gx]]
+        coords = []
+        polys = []
+        for _ in range(max_its):
+            current_point = route[-1,:]
+            (found, coordsT, polysT) = self.robot.seekObstacles(self.obstacleMap)
+            if found:
+                [gy, gx] = self.getForces()
+                # Gradient returns y-axis and then x-axis
+
+            if self.goals[0].isTouching(self.robot):
+                print('Reached the goal !')
+                break
+            
+            # NumPy arrays access grids by (row, column) so it is inverted
+            row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
+            col = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+
+            vx = gx[row, col]
+            vy = gy[row, col]
+            dt = 1 / np.linalg.norm([vx, vy])
+            next_point = current_point + dt*np.array([vx, vy])
+            self.robot.path.insert(0, next_point)
+            self.robot.coords = next_point
+            self.robot.direction = np.arctan2(-vy, vx)
+            # y values go from top to bottom in NumPy arrays, need to negate to offset it
+            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
+                print("Got stuck")
+                self.robot.digitalMap[row, col] = True
+                [gy, gx] = self.getForces()
+            route = np.vstack( [route, next_point] )
+            forces.append([gy, gx])
+            coords.append(coordsT)
+            polys.append(polysT)
+        route = route[1:,:]
+        return route, forces, coords, polys    
+
+    @override
+    def animate(self, **kwargs):
+        """
+        Animates the robot moving through the Lattice with the APF algorithm
+        Optional parameters
+        -------------------
+        
+        skip: int
+              up/down scaling of the quiver plot for animating
+
+        max_its: int
+                 max number of Euler steps to generate (default 400)
+        
+        drop: int
+              number of discarded frames (default 1 [None])
+        """
+        skip = int(kwargs.get('skip', 10))
+        max_its = kwargs.get('max_its', 400)
+        fig, ax = self.draw(skip)
+    
+        # Calculate the path from the robot's start to the goal using calcPath
+        path, forces, coords, polygons = self.calcPath(max_its)
+        
+        drop = kwargs.get('drop', 1)
+        
+        quiver = ax.quiver(self.X[::skip, ::skip], self.Y[::skip, ::skip], forces[0][1][::skip, ::skip], forces[0][0][::skip, ::skip], pivot='mid', color='gray', alpha=0.5)
+
+        def init():
+            self.movePatches(ax)
+            return [quiver]
+        
+        def generate():
+          for i in tqdm(range(len(path) - 1)):
+             if i % drop == 0:
+                yield i
+
+        def update(i):
+            
+            ax.clear()
+
+            if i < len(path):
+                self.robot.coords = path[i]
+                for obs_coords in coords[i]:
+                    if obs_coords:
+                        (x_vals, y_vals) = zip(*obs_coords)
+                        plt.plot(x_vals, y_vals, 'g--')
+                for poly in polygons[i]:
+                    x, y = poly.exterior.xy
+                    plt.fill(x, y, alpha = 0.3, fc='green', label='Vision Cone')
+            
+            self.movePatches(ax)
+
+            quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
+            vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            vy = forces[i][0][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            
+            direction_vector = np.array([vx, vy])
+            
+            ax.arrow(self.robot.coords[0], self.robot.coords[1], direction_vector[0], direction_vector[1],
+                     head_width=self.robot.radius, head_length=self.robot.radius, fc='blue', ec='blue')
+            
+            return [quiver]
+
+        matplotlib.rcParams['animation.embed_limit'] = 2**128
+        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False)
+        writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
+        ani.save('Car.mp4', writer = writervideo)
+        
+        return HTML(ani.to_jshtml())
+    
