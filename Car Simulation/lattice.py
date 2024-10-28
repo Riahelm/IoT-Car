@@ -129,7 +129,7 @@ class Lattice:
 
             vx = gx[row, col]
             vy = gy[row, col]
-            dt = 1 / np.linalg.norm([vx, vy])
+            dt = self.robot.vision / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
             self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
@@ -266,15 +266,18 @@ class Lattice:
         
         drop = kwargs.get('drop', 1)
         
+        quiver = ax.quiver(self.X[::skip, ::skip], self.Y[::skip, ::skip], forces[0][1][::skip, ::skip], forces[0][0][::skip, ::skip], pivot='mid', color='gray', alpha=0.5)
+
+        def init():
+            self.movePatches(ax)
+            return [quiver]
+        
         def generate():
-          global stop
-          stop = False
           for i in tqdm(range(len(path) - 1)):
              if i % drop == 0:
                 yield i
 
         def update(i):
-            global stop
             
             ax.clear()
 
@@ -295,12 +298,12 @@ class Lattice:
             direction_vector = np.array([vx, vy])
             
             ax.arrow(self.robot.coords[0], self.robot.coords[1], direction_vector[0], direction_vector[1],
-                     head_width=5, head_length=5, fc='blue', ec='blue')
+                     head_width=self.robot.radius, head_length=self.robot.radius, fc='blue', ec='blue')
             
-            return quiver
+            return [quiver]
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
-        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False)
+        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate,  cache_frame_data=False, blit = True, repeat = False)
         writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
         ani.save('Car.mp4', writer = writervideo)
         
