@@ -1,5 +1,12 @@
 import numpy as np
 
+def normalize_radians(angle):
+    """ Normalize an angle to be within the range [0, 2π) radians. """
+    normalized_angle = angle % (2 * np.pi)
+    if normalized_angle < 0:
+        normalized_angle += 2 * np.pi
+    return normalized_angle
+
 def getDistanceFromCoordinate(x, y, x2, y2) -> float:
     return np.sqrt((x - x2)**2 + (y - y2)**2)
 
