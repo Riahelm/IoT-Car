@@ -250,13 +250,9 @@ void parsers::GoTo(String param){
 
     if(-4000 < x < 4000 && -4000 < y < 4000){
         uint16_t turnAngleDeg = uint16_t(atan2(x, y) * (180 / PI));
-        /* Steppers automatically adjust if degrees are negative */
-        telStep->turnLeft(uint16_t(turnAngleDeg));
-        /* Steppers automatically adjust if degrees are positive */
-        telStep->goForwards( x * 10);
-        //sensors = new DistanceSens(triggerPin, 3, sensorPins, 20);  /* Create sensor  object */
-        //thread sensorT(&DistanceSens::start, sensors);         /* Create sensor  thread */
-        //sensorT.detach();                                           /* Allows for thread to run independently from setup() */
+        telnet.println("x-value is: " + String(x));
+        telnet.println("y-value is: " + String(y));
+        telnet.println("Turning by angle: " + String(turnAngleDeg));
     }
 }
 

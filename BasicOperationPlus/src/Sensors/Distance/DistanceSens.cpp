@@ -18,6 +18,7 @@ DistanceSens::DistanceSens(uint8_t trigPin, uint8_t sensorCount, uint8_t *sensor
 }
 
 /* Class destructor */
+/* Remove averages, calloc present!! */
 DistanceSens::~DistanceSens() {}
 
 /* Function that remains alive throughout the whole execution */

@@ -6,7 +6,7 @@
 #include "src/Sensors/Distance/DistanceSens.h"
 #include "src/Communication/MyWiFi/MyWiFi.h"
 #include "src/Communication/MyTelnet/MyTelnet.h"
-
+#include "src/Util/EmergencyReset/EmergencyReset.h"
 
 #define IS_REAL
 
