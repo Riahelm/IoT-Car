@@ -91,7 +91,7 @@ class Third_Paper_Robot (Robot):
             res = True
         return res
     
-class ComplexRobot(Third_Paper_Robot):
+class Polygon_Robot(Third_Paper_Robot):
     def __init__(self, coords, **kwargs):
         """
         Robot of spherical shape
@@ -127,11 +127,12 @@ class ComplexRobot(Third_Paper_Robot):
         rightDir = self.direction - self.sensor_angle
 
         coords = []
-        self.mark_geometry(leftDir)
-        self.mark_geometry(self.direction)
-        self.mark_geometry(rightDir)
-        print("Crashing to avoid continuous plotting")
-        (foundT, coordsL) = super.mark_obstacles(obstacleMap, leftDir)
+        polys = []
+        polysL = self.get_cone(leftDir)
+        polysC = self.get_cone(self.direction)
+        polysR = self.get_cone(rightDir)
+
+        (foundT, coordsL) = super().mark_obstacles(obstacleMap, leftDir)
         if foundT:
             found = True
         (foundT, coordsC) = super().mark_obstacles(obstacleMap, self.direction)
@@ -140,18 +141,22 @@ class ComplexRobot(Third_Paper_Robot):
         (foundT, coordsR) = super().mark_obstacles(obstacleMap, rightDir)
         if foundT:
             found = True
+
+        polys.append(polysL)
+        polys.append(polysC)
+        polys.append(polysR)
         coords.append(coordsL)
         coords.append(coordsC)
         coords.append(coordsR)
-        return found, coords
+        return found, coords, polys
     
 
     def get_cone(self, angle):
         left_extreme = angle - self.sensor_tolerance
         right_extreme = angle + self.sensor_tolerance
 
-        left_point = self.coords + self.vision * np.array([np.cos(left_extreme), np.sin(left_extreme)])
-        right_point = self.coords + self.vision * np.array([np.cos(right_extreme), np.sin(right_extreme)])
+        left_point = self.coords + self.vision * np.array([np.cos(left_extreme), -np.sin(left_extreme)])
+        right_point = self.coords + self.vision * np.array([np.cos(right_extreme), -np.sin(right_extreme)])
 
         vertices = [tuple(self.coords), tuple(left_point), tuple(right_point)]
         return Polygon(vertices)
@@ -164,8 +169,4 @@ class ComplexRobot(Third_Paper_Robot):
         plt.fill(x, y, alpha = 0.3, fc='blue', label='Vision Cone')
         plt.show()
 
-    def mark_geometry(self, angle):
-        
-        poly = self.get_cone(angle)
-        
 
