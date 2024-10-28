@@ -77,7 +77,6 @@ class Lattice:
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
 
-
     def randomize(self):
         #self.addRobot(Robot(1, (3, 3), 10))
 
