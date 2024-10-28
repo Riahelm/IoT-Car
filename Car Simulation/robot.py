@@ -1,11 +1,9 @@
 from typing import override
 import numpy as np
-import math
-from shapely.affinity import rotate, translate
-from shapely import Polygon
+from shapely import Point, Polygon
 from sphere import Sphere
 from matplotlib import pyplot as plt
-from util import bresenham
+from util import bresenham, normalize_radians
 class Robot(Sphere):
     def __init__(self, coords, **kwargs):
         """
@@ -118,55 +116,56 @@ class Polygon_Robot(Third_Paper_Robot):
                           fixed angular cone of vision (default sensor_angle)
         """
         super().__init__(coords, **kwargs)
-        self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', self.sensor_angle)))
+        self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', self.sensor_angle)) % 360)
 
     @override
     def seekObstacles(self, obstacleMap):
         found = False
-        leftDir  = self.direction + self.sensor_angle
-        rightDir = self.direction - self.sensor_angle
-
-        coords = []
+        leftDir  = normalize_radians(self.direction - self.sensor_angle)
+        rightDir = normalize_radians(self.direction + self.sensor_angle)
+        
         polys = []
-        polysL = self.get_cone(leftDir)
-        polysC = self.get_cone(self.direction)
-        polysR = self.get_cone(rightDir)
-
-        (foundT, coordsL) = super().mark_obstacles(obstacleMap, leftDir)
+        obsList = [Point(col, row) for row, col in np.argwhere(obstacleMap)]
+        
+        (foundT, polyL) = self.mark_obstacles(obsList, leftDir)
         if foundT:
             found = True
-        (foundT, coordsC) = super().mark_obstacles(obstacleMap, self.direction)
+        (foundT, polyC) = self.mark_obstacles(obsList, self.direction)
         if foundT:
             found = True
-        (foundT, coordsR) = super().mark_obstacles(obstacleMap, rightDir)
+        (foundT, polyR) = self.mark_obstacles(obsList, rightDir)
         if foundT:
             found = True
 
-        polys.append(polysL)
-        polys.append(polysC)
-        polys.append(polysR)
-        coords.append(coordsL)
-        coords.append(coordsC)
-        coords.append(coordsR)
-        return found, coords, polys
+        polys.append((polyL, polyC, polyR))
+        return found, polys
     
+    @override
+    def mark_obstacles(self, obsList, angle):
+        
+        polygon = self.get_cone(self.vision, angle)
+        found = False
+        containedPoints = [point for point in obsList if polygon.contains(point)]
 
-    def get_cone(self, angle):
-        left_extreme = angle - self.sensor_tolerance
-        right_extreme = angle + self.sensor_tolerance
+        if containedPoints:
+            best = min(containedPoints, key=lambda p : polygon.distance(p))
 
-        left_point = self.coords + self.vision * np.array([np.cos(left_extreme), -np.sin(left_extreme)])
-        right_point = self.coords + self.vision * np.array([np.cos(right_extreme), -np.sin(right_extreme)])
+            if not self.digitalMap[int(best.y), int(best.x)]:
+                self.digitalMap[int(best.y), int(best.x)] = True
+                found = True
+
+        return (found, polygon)
+    
+    def get_cone(self, vision, angle):
+
+        left_extreme =  normalize_radians(angle + self.sensor_tolerance)
+        right_extreme = normalize_radians(angle - self.sensor_tolerance)
+
+        left_point = self.coords + vision * np.array([ np.cos(left_extreme), -np.sin(left_extreme)])
+        right_point = self.coords + vision * np.array([ np.cos(right_extreme), -np.sin(right_extreme)])
 
         vertices = [tuple(self.coords), tuple(left_point), tuple(right_point)]
         return Polygon(vertices)
     
-    def plot_cone(self, cone):
-        x, y = cone.exterior.xy
-        x0, y0 = int(self.coords[0]), int(self.coords[1])
-
-        plt.plot(x0, y0, 'bo', markersize = 10, label = "Robot")
-        plt.fill(x, y, alpha = 0.3, fc='blue', label='Vision Cone')
-        plt.show()
 
 
