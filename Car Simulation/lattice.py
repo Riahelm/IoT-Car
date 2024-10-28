@@ -9,6 +9,7 @@ from   tqdm.auto import tqdm
 from robot import * 
 from goal import Goal 
 from obstacle import Obstacle 
+from shapely import Point, Polygon
 
 class Lattice:
     def __init__(self, rows: int, columns: int, robot: Robot, goal: Goal, **kwargs):
@@ -76,11 +77,12 @@ class Lattice:
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
 
+
     def randomize(self):
         #self.addRobot(Robot(1, (3, 3), 10))
 
-        for _ in range(20):
-            self.addObstacle(Obstacle(rd(5, 10), (rd(0, self.num_cols), rd(0, self.num_rows))))
+        for _ in range(5):
+            self.addObstacle(Obstacle(rd(1, 5), (rd(0, self.num_cols), rd(0, self.num_rows))))
 
     def genObs(self):
         self.obstacleMap [300:, 100:250] = True
@@ -400,14 +402,10 @@ class Polygon_Lattice(Third_Paper_Lattice):
         [gy, gx] = self.getForces()
         route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
         forces = [[gy, gx]]
-        coords = []
         polys = []
         for _ in range(max_its):
             current_point = route[-1,:]
-            (found, coordsT, polysT) = self.robot.seekObstacles(self.obstacleMap)
-            if found:
-                [gy, gx] = self.getForces()
-                # Gradient returns y-axis and then x-axis
+
 
             if self.goals[0].isTouching(self.robot):
                 print('Reached the goal !')
@@ -424,17 +422,21 @@ class Polygon_Lattice(Third_Paper_Lattice):
             self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
+            (found, polysT) = self.robot.seekObstacles(self.obstacleMap)
+            if found:
+                [gy, gx] = self.getForces()
+                # Gradient returns y-axis and then x-axis
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
             if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
+                
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
-            coords.append(coordsT)
             polys.append(polysT)
         route = route[1:,:]
-        return route, forces, coords, polys    
+        return route, forces, polys    
 
     @override
     def animate(self, **kwargs):
@@ -457,7 +459,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
         fig, ax = self.draw(skip)
     
         # Calculate the path from the robot's start to the goal using calcPath
-        path, forces, coords, polygons = self.calcPath(max_its)
+        path, forces, polygons = self.calcPath(max_its)
         
         drop = kwargs.get('drop', 1)
         
@@ -478,13 +480,10 @@ class Polygon_Lattice(Third_Paper_Lattice):
 
             if i < len(path):
                 self.robot.coords = path[i]
-                for obs_coords in coords[i]:
-                    if obs_coords:
-                        (x_vals, y_vals) = zip(*obs_coords)
-                        plt.plot(x_vals, y_vals, 'g--')
-                for poly in polygons[i]:
-                    x, y = poly.exterior.xy
-                    plt.fill(x, y, alpha = 0.3, fc='green', label='Vision Cone')
+                for polys in polygons[i]:
+                    for poly in polys:
+                        x, y = poly.exterior.xy
+                        plt.fill(x, y, alpha = 0.3, fc='green', label='Vision Cone')
             
             self.movePatches(ax)
 
