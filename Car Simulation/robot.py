@@ -19,7 +19,7 @@ class Robot(Sphere):
                  sensor max distance of the robot (default 6 * radius)
 
         tolerance: int
-                   radius of newly added obstacles for increased performance (default 2)
+                   radius of newly added obstacles for increased performance (default radius * 3)
         
         direction: degrees
                    initial direction of the robot (default 0)
@@ -29,7 +29,7 @@ class Robot(Sphere):
         """
         super().__init__(float(kwargs.get('radius', 1)), coords)
         self.vision = float(kwargs.get('vision', self.radius * 6))
-        self.tol = int(kwargs.get('tolerance', 2))
+        self.tol = int(kwargs.get('tolerance', self.radius * 3))
         self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
         self.sensor_angle = np.radians(float(kwargs.get('sensor_angle', 45)) % 360)
 
@@ -187,7 +187,8 @@ class Polygon_Robot(Third_Paper_Robot):
             polygon = self.get_cone(vision, angle)
             
             if not self.digitalMap[int(best.y), int(best.x)]:
-                self.digitalMap[int(best.y), int(best.x)] = True
+                y, x = int(best.y), int(best.x)
+                self.digitalMap[y - self.tol : y + self.tol, x - self.tol : x + self.tol] = True
                 found = True
         return (found, polygon)
     
@@ -196,22 +197,26 @@ class Polygon_Robot(Third_Paper_Robot):
         next_point = current_point + dt*np.array([vx, vy])
 
         x0, y0 = int(self.coords[1]), int(self.coords[0])
-        x1, y1 = round(next_point[1]), round(next_point[0])
+
+        boundedX = np.clip(round(next_point[1]), 0, self.digitalMap.shape[0] - 1)
+        boundedY = np.clip(round(next_point[0]), 0, self.digitalMap.shape[1] - 1)
+        boundedNext = (boundedY, boundedX)
+        x1, y1 = boundedX, boundedY
 
         crossed = False
-        line = LineString([(x0,y0), (x1,y1)])
+        line = LineString([self.coords, boundedNext]).buffer(self.radius)
         for row, col in np.argwhere(obstacleMap):
             obstacle = Point(col, row)
             if line.distance(obstacle) < self.radius:
                 crossed = True
                 diam = 2 * self.radius
-                next_point = (col - diam, row - diam)
+                boundedNext = (col - diam, row - diam)
                 print("Went through an obstacle")
 
         if not crossed:
-            self.coords = next_point
+            self.coords = boundedNext
             self.direction = np.arctan2(-vy, vx)
-        return next_point
+        return boundedNext
     
     def get_cone(self, vision, angle):
 
