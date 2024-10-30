@@ -3,7 +3,7 @@ import numpy as np
 from shapely import Point, Polygon
 from sphere import Sphere
 from matplotlib import pyplot as plt
-from util import bresenham, normalize_radians
+from util import bresenham, normalize_radians, getDistanceFromCoordinate
 class Robot(Sphere):
     def __init__(self, coords, **kwargs):
         """
@@ -149,11 +149,12 @@ class Polygon_Robot(Third_Paper_Robot):
 
         if containedPoints:
             best = min(containedPoints, key=lambda p : polygon.distance(p))
-
+            vision = getDistanceFromCoordinate(self.coords[1], self.coords[0], best.y, best.x)
+            polygon = self.get_cone(vision, angle)
+            
             if not self.digitalMap[int(best.y), int(best.x)]:
                 self.digitalMap[int(best.y), int(best.x)] = True
                 found = True
-
         return (found, polygon)
     
     def get_cone(self, vision, angle):
