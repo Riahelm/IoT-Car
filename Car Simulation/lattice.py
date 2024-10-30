@@ -424,7 +424,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 # Gradient returns y-axis and then x-axis
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
         
-            if (vx, vy) == (0, 0): #or self.robot.isStuck(self.getPotential()):
+            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
