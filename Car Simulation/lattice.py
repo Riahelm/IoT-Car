@@ -405,6 +405,11 @@ class Polygon_Lattice(Third_Paper_Lattice):
         forces = [[gy, gx]]
         _, initPoly = self.robot.seek_obstacles(self.obstacleMap)
         polys = [initPoly]
+        row = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
+        col = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
+        vx = gx[row, col]
+        vy = gy[row, col]
+        self.robot.direction = np.arctan2(-vy, vx)
         for _ in range(max_its):
             current_point = route[-1,:]
 
@@ -431,7 +436,9 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
-                
+                gy[row, col] *= np.random.rand() - 0.5
+                gx[row, col] *= np.random.rand() - 0.5 
+
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
             polys.append(polysT)
