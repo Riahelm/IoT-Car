@@ -1,8 +1,8 @@
 import numpy as np
 
 def get_bounded_indexes(coords, shapes):
-    i = np.clip(int(coords[1]), 0, shapes[1] - 1)
-    j = np.clip(int(coords[0]), 0, shapes[0] - 1)
+    i = np.clip(int(coords[1]), 0, shapes[0] - 1)
+    j = np.clip(int(coords[0]), 0, shapes[1] - 1)
     return (i, j)
 
 def normalize_radians(angle):
