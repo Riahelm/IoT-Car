@@ -1,5 +1,10 @@
 import numpy as np
 
+def get_bounded_indexes(coords, shapes):
+    i = np.clip(int(coords[1]), 0, shapes[1] - 1)
+    j = np.clip(int(coords[0]), 0, shapes[0] - 1)
+    return (i, j)
+
 def normalize_radians(angle):
     """ Normalize an angle to be within the range [0, 2π) radians. """
     normalized_angle = angle % (2 * np.pi)
