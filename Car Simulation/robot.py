@@ -196,12 +196,9 @@ class Polygon_Robot(Third_Paper_Robot):
         dt = (self.vision * self.scale) / np.linalg.norm([vx, vy])
         next_point = current_point + dt*np.array([vx, vy])
 
-        x0, y0 = int(self.coords[1]), int(self.coords[0])
-
         boundedX = np.clip(round(next_point[1]), 0, self.digitalMap.shape[0] - 1)
         boundedY = np.clip(round(next_point[0]), 0, self.digitalMap.shape[1] - 1)
         boundedNext = (boundedY, boundedX)
-        x1, y1 = boundedX, boundedY
 
         crossed = False
         line = LineString([self.coords, boundedNext]).buffer(self.radius)
@@ -217,7 +214,7 @@ class Polygon_Robot(Third_Paper_Robot):
             self.coords = boundedNext
             self.direction = np.arctan2(-vy, vx)
         return boundedNext
-    
+
     def get_cone(self, vision, angle):
 
         left_extreme =  normalize_radians(angle + self.sensor_tolerance)
