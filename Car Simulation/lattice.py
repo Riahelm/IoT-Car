@@ -115,7 +115,7 @@ class Lattice:
           coords = []
           for _ in range(max_its):
             current_point = route[-1,:]
-            (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
+            (found, coordsT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
@@ -130,7 +130,7 @@ class Lattice:
 
             vx = gx[row, col]
             vy = gy[row, col]
-            dt = self.robot.vision / np.linalg.norm([vx, vy])
+            dt = 1 / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
             self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
@@ -361,7 +361,7 @@ class Third_Paper_Lattice (Lattice):
         coords = []
         for _ in range(max_its):
             current_point = route[-1,:]
-            (found, coordsT) = self.robot.seekObstacles(self.obstacleMap)
+            (found, coordsT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
@@ -401,13 +401,15 @@ class Polygon_Lattice(Third_Paper_Lattice):
         [gy, gx] = self.getForces()
         route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
         forces = [[gy, gx]]
-        polys = []
+        _, initPoly = self.robot.seek_obstacles(self.obstacleMap)
+        polys = [initPoly]
         for _ in range(max_its):
             current_point = route[-1,:]
 
 
             if self.goals[0].isTouching(self.robot):
                 print('Reached the goal !')
+                route = np.vstack( [route, current_point] )
                 break
             
             # NumPy arrays access grids by (row, column) so it is inverted
@@ -416,12 +418,12 @@ class Polygon_Lattice(Third_Paper_Lattice):
 
             vx = gx[row, col]
             vy = gy[row, col]
-            dt = 1 / np.linalg.norm([vx, vy])
+            dt = self.robot.vision / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
             self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
-            (found, polysT) = self.robot.seekObstacles(self.obstacleMap)
+            (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
@@ -477,7 +479,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
             
             ax.clear()
 
-            if i < len(path):
+            if i <= len(path):
                 self.robot.coords = path[i]
                 for polys in polygons[i]:
                     for poly in polys:

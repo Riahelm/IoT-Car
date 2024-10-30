@@ -39,7 +39,7 @@ class Robot(Sphere):
             raise ValueError
         self.digitalMap = np.zeros(mapShape)
 
-    def seekObstacles(self, obstacleMap):
+    def seek_obstacles(self, obstacleMap):
         found = False
         leftDir  = self.direction + self.sensor_angle
         rightDir = self.direction - self.sensor_angle
@@ -76,19 +76,50 @@ class Robot(Sphere):
 class Third_Paper_Robot (Robot):
     def __init__(self, coords, **kwargs):
         super().__init__(coords, **kwargs)
-
+        self.recent_positions = []
     def isStuck(self, Utot) -> bool:
-        res = False
-        i = min(max(int(self.coords[0]), 0), Utot.shape[1] - 1)
-        j = min(max(int(self.coords[1]), 0), Utot.shape[0] - 1)
-        neighbours = Utot[i-1: i+2, j-1:j+2]
-        local_minimum = np.unravel_index(np.argmin(neighbours), neighbours.shape)
-        new_i = i - 1 + local_minimum[0]  # New global i (y)
-        new_j = j - 1 + local_minimum[1]  # New global j (x)
-        if (i, j) == (new_j, new_i):
-            res = True
-        return res
-    
+        """
+        Determines if the robot is stuck due to zero force, a local minimum,
+        or by moving in circles.
+
+        Parameters:
+        -----------
+        Utot : ndarray
+            The total potential field where the robot is navigating.
+
+        Returns:
+        --------
+        bool
+            True if the robot is considered stuck, otherwise False.
+        """
+        # Get current robot position on the grid
+        i = min(max(int(self.coords[1]), 0), Utot.shape[1] - 1)
+        j = min(max(int(self.coords[0]), 0), Utot.shape[0] - 1)
+
+        # Check if the robot is in a local minimum by comparing to neighbors
+        neighbors = Utot[j-1: j+2, i-1:i+2]
+        local_minimum = np.unravel_index(np.argmin(neighbors), neighbors.shape)
+        new_i = i - 1 + local_minimum[1]
+        new_j = j - 1 + local_minimum[0]
+
+        # If the robot is in a local minimum
+        if (i, j) == (new_i, new_j):
+            return True
+
+        # Detect circular movement by tracking recent positions
+        pos = tuple(self.coords)
+        if pos in self.recent_positions:
+            return True  # Stuck due to looping
+
+        # Update recent positions with a fixed-length queue
+        self.recent_positions.append(pos)
+        if len(self.recent_positions) > 10:  # Limit to the last 10 positions
+            self.recent_positions.pop(0)
+
+        # Not stuck
+        return False
+
+
 class Polygon_Robot(Third_Paper_Robot):
     def __init__(self, coords, **kwargs):
         """
@@ -119,7 +150,7 @@ class Polygon_Robot(Third_Paper_Robot):
         self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', self.sensor_angle)) % 360)
 
     @override
-    def seekObstacles(self, obstacleMap):
+    def seek_obstacles(self, obstacleMap):
         found = False
         leftDir  = normalize_radians(self.direction - self.sensor_angle)
         rightDir = normalize_radians(self.direction + self.sensor_angle)
@@ -162,7 +193,7 @@ class Polygon_Robot(Third_Paper_Robot):
         left_extreme =  normalize_radians(angle + self.sensor_tolerance)
         right_extreme = normalize_radians(angle - self.sensor_tolerance)
 
-        left_point = self.coords + vision * np.array([ np.cos(left_extreme), -np.sin(left_extreme)])
+        left_point =  self.coords + vision * np.array([ np.cos(left_extreme), -np.sin(left_extreme)])
         right_point = self.coords + vision * np.array([ np.cos(right_extreme), -np.sin(right_extreme)])
 
         vertices = [tuple(self.coords), tuple(left_point), tuple(right_point)]
