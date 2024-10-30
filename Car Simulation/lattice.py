@@ -155,11 +155,13 @@ class Lattice:
 
         #Update obstacles
         (obsY, obsX) = np.where(self.obstacleMap == True)
-        #(obsY, obsX) = np.where(self.robot.digitalMap == True)
         for x, y in zip(obsX, obsY):
             obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=1)  # Use self.robot.tol for the radius
             ax.add_patch(obstacle_patch)
-        
+        (obsY, obsX) = np.where(self.robot.digitalMap == True)
+        for x, y in zip(obsX, obsY):
+            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='y', alpha=0.2)  # Use self.robot.tol for the radius
+            ax.add_patch(obstacle_patch)        
         # Update goals
         for goal in self.goals:
             if hasattr(goal, 'patch'):
@@ -287,10 +289,11 @@ class Lattice:
 
             
             self.movePatches(ax)
-
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
-            vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
-            vy = forces[i][0][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            boundedX = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
+            boundedY = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
+            vx = forces[i][1][boundedX, boundedY]
+            vy = forces[i][0][boundedX, boundedY]
             
             direction_vector = np.array([vx, vy])
             
@@ -405,7 +408,6 @@ class Polygon_Lattice(Third_Paper_Lattice):
         for _ in range(max_its):
             current_point = route[-1,:]
 
-
             if self.goals[0].isTouching(self.robot):
                 print('Reached the goal !')
                 route = np.vstack( [route, current_point] )
@@ -419,12 +421,12 @@ class Polygon_Lattice(Third_Paper_Lattice):
             vy = gy[row, col]
             
             next_point = self.robot.move(vy, vx, current_point, self.obstacleMap)
-        
             (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
                 # Gradient returns y-axis and then x-axis
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
+        
             if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
@@ -486,8 +488,11 @@ class Polygon_Lattice(Third_Paper_Lattice):
             self.movePatches(ax)
 
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
-            vx = forces[i][1][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
-            vy = forces[i][0][int(round(self.robot.coords[1])), int(round(self.robot.coords[0]))]
+            
+            boundedX = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
+            boundedY = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
+            vx = forces[i][1][boundedX, boundedY]
+            vy = forces[i][0][boundedX, boundedY]
             
             direction_vector = np.array([vx, vy])
             
