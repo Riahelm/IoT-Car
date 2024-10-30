@@ -1,6 +1,6 @@
 from typing import override
 import numpy as np
-from shapely import Point, Polygon
+from shapely import LineString, Point, Polygon
 from sphere import Sphere
 from matplotlib import pyplot as plt
 from util import bresenham, normalize_radians, getDistanceFromCoordinate
@@ -175,11 +175,11 @@ class Polygon_Robot(Third_Paper_Robot):
         return found, polys
     
     @override
-    def mark_obstacles(self, obsList, angle):
+    def mark_obstacles(self, obs_list, angle):
         
         polygon = self.get_cone(self.vision, angle)
         found = False
-        containedPoints = [point for point in obsList if polygon.contains(point)]
+        containedPoints = [point for point in obs_list if polygon.contains(point)]
 
         if containedPoints:
             best = min(containedPoints, key=lambda p : polygon.distance(p))
@@ -191,11 +191,26 @@ class Polygon_Robot(Third_Paper_Robot):
                 found = True
         return (found, polygon)
     
-    def move(self, vy, vx, current_point):
+    def move(self, vy, vx, current_point, obstacleMap):
         dt = (self.vision * self.scale) / np.linalg.norm([vx, vy])
         next_point = current_point + dt*np.array([vx, vy])
-        self.coords = next_point
-        self.direction = np.arctan2(-vy, vx)
+
+        x0, y0 = int(self.coords[1]), int(self.coords[0])
+        x1, y1 = round(next_point[1]), round(next_point[0])
+
+        crossed = False
+        line = LineString([(x0,y0), (x1,y1)])
+        for row, col in np.argwhere(obstacleMap):
+            obstacle = Point(col, row)
+            if line.distance(obstacle) < self.radius:
+                crossed = True
+                diam = 2 * self.radius
+                next_point = (col - diam, row - diam)
+                print("Went through an obstacle")
+
+        if not crossed:
+            self.coords = next_point
+            self.direction = np.arctan2(-vy, vx)
         return next_point
     
     def get_cone(self, vision, angle):
