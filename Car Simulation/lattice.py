@@ -132,7 +132,6 @@ class Lattice:
             vy = gy[row, col]
             dt = 1 / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
-            self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
             self.robot.direction = normalize_radians(np.arctan2(-vy, vx))
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
@@ -376,9 +375,9 @@ class Third_Paper_Lattice (Lattice):
 
             vx = gx[row, col]
             vy = gy[row, col]
+            
             dt = 1 / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
-            self.robot.path.insert(0, next_point)
             self.robot.coords = next_point
             self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
@@ -418,11 +417,9 @@ class Polygon_Lattice(Third_Paper_Lattice):
 
             vx = gx[row, col]
             vy = gy[row, col]
-            dt = self.robot.vision / np.linalg.norm([vx, vy])
-            next_point = current_point + dt*np.array([vx, vy])
-            self.robot.path.insert(0, next_point)
-            self.robot.coords = next_point
-            self.robot.direction = np.arctan2(-vy, vx)
+            
+            next_point = self.robot.move(vy, vx, current_point)
+        
             (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()

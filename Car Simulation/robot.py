@@ -32,7 +32,6 @@ class Robot(Sphere):
         self.tol = int(kwargs.get('tolerance', 2))
         self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
         self.sensor_angle = np.radians(float(kwargs.get('sensor_angle', 45)) % 360)
-        self.path = [self.coords]
 
     def addMap(self, mapShape):
         if len(mapShape) != 2:
@@ -145,9 +144,13 @@ class Polygon_Robot(Third_Paper_Robot):
         
         sensor_tolerance: degrees
                           fixed angular cone of vision (default sensor_angle)
+        
+        scale: float
+                    up/down scaling value of step w.r.t vision (default 1, step = vision)
         """
         super().__init__(coords, **kwargs)
         self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', self.sensor_angle)) % 360)
+        self.scale = float(kwargs.get('scale', self.vision))
 
     @override
     def seek_obstacles(self, obstacleMap):
@@ -187,6 +190,13 @@ class Polygon_Robot(Third_Paper_Robot):
                 self.digitalMap[int(best.y), int(best.x)] = True
                 found = True
         return (found, polygon)
+    
+    def move(self, vy, vx, current_point):
+        dt = (self.vision * self.scale) / np.linalg.norm([vx, vy])
+        next_point = current_point + dt*np.array([vx, vy])
+        self.coords = next_point
+        self.direction = np.arctan2(-vy, vx)
+        return next_point
     
     def get_cone(self, vision, angle):
 
