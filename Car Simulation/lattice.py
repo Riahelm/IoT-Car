@@ -418,7 +418,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
             vx = gx[row, col]
             vy = gy[row, col]
             
-            next_point = self.robot.move(vy, vx, current_point)
+            next_point = self.robot.move(vy, vx, current_point, self.obstacleMap)
         
             (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
