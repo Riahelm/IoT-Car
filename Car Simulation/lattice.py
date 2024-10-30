@@ -10,7 +10,7 @@ from robot import *
 from goal import Goal 
 from obstacle import Obstacle 
 from shapely import Point, Polygon
-
+from util import get_bounded_indexes
 class Lattice:
     def __init__(self, rows: int, columns: int, robot: Robot, goal: Goal, **kwargs):
         """
@@ -56,7 +56,7 @@ class Lattice:
         self.num_rows = rows
         self.num_cols = columns
         self.robot = robot
-        [self.X, self.Y] = np.meshgrid(np.arange(columns), np.arange(rows))
+        [self.X, self.Y] = np.meshgrid(np.arange(rows), np.arange(columns))
         robot.addMap(self.X.shape)
         self.Fx = np.zeros_like(self.X, dtype=float)
         self.Fy = np.zeros_like(self.Y, dtype=float)
@@ -78,19 +78,12 @@ class Lattice:
             self.obstacleMap [t] = True
 
     def randomize(self, num):
-        #self.addRobot(Robot(1, (3, 3), 10))
 
         for _ in range(num):
             self.addObstacle(Obstacle(rd(1, 2), (rd(0, self.num_cols), rd(0, self.num_rows))))
 
     def genObs(self):
-        self.obstacleMap [300:, 100:250] = True
-        self.obstacleMap [150:200, 400:500] = True
-
-        t = ((self.X - 200)**2 + (self.Y - 50)**2) < 50**2
-        self.obstacleMap[t] = True
-
-        t = ((self.X - 400)**2 + (self.Y - 300)**2) < 100**2
+        t = self.X **2 - self.Y **2 < 50**2
         self.obstacleMap[t] = True
 
     def getPotential(self):
@@ -290,10 +283,11 @@ class Lattice:
             
             self.movePatches(ax)
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
-            boundedX = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
-            boundedY = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
-            vx = forces[i][1][boundedX, boundedY]
-            vy = forces[i][0][boundedX, boundedY]
+
+            row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
+
+            vx = forces[i][1][row, col]
+            vy = forces[i][0][row, col]
             
             direction_vector = np.array([vx, vy])
             
@@ -373,8 +367,7 @@ class Third_Paper_Lattice (Lattice):
                 break
             
             # NumPy arrays access grids by (row, column) so it is inverted
-            row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
-            col = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+            row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
 
             vx = gx[row, col]
             vy = gy[row, col]
@@ -405,8 +398,8 @@ class Polygon_Lattice(Third_Paper_Lattice):
         forces = [[gy, gx]]
         _, initPoly = self.robot.seek_obstacles(self.obstacleMap)
         polys = [initPoly]
-        row = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
-        col = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
+        row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
+
         vx = gx[row, col]
         vy = gy[row, col]
         self.robot.direction = np.arctan2(-vy, vx)
@@ -419,8 +412,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 break
             
             # NumPy arrays access grids by (row, column) so it is inverted
-            row = np.clip(int(current_point[1]), 0, self.obstacleMap.shape[0] - 1)
-            col = np.clip(int(current_point[0]), 0, self.obstacleMap.shape[1] - 1)
+            row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
 
             vx = gx[row, col]
             vy = gy[row, col]
@@ -432,7 +424,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 # Gradient returns y-axis and then x-axis
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
         
-            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
+            if (vx, vy) == (0, 0): #or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
@@ -496,10 +488,9 @@ class Polygon_Lattice(Third_Paper_Lattice):
 
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
             
-            boundedX = np.clip(int(self.robot.coords[1]), 0, self.obstacleMap.shape[0] - 1)
-            boundedY = np.clip(int(self.robot.coords[0]), 0, self.obstacleMap.shape[1] - 1)
-            vx = forces[i][1][boundedX, boundedY]
-            vy = forces[i][0][boundedX, boundedY]
+            col, row = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
+            vx = forces[i][1][row, col]
+            vy = forces[i][0][row, col]
             
             direction_vector = np.array([vx, vy])
             
