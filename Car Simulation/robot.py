@@ -94,8 +94,13 @@ class Third_Paper_Robot (Robot):
         # Get current robot position on the grid
         i, j = get_bounded_indexes(self.coords, Utot.shape)
         
+        i_min = np.clip(i - 1, 0, Utot.shape[1] - 1)
+        i_max = np.clip(i + 1, 0, Utot.shape[1] - 1)
+        j_min = np.clip(j - 1, 0, Utot.shape[0] - 1)
+        j_max = np.clip(j + 1, 0, Utot.shape[0] - 1)
+
         # Check if the robot is in a local minimum by comparing to neighbors
-        neighbors = Utot[j-1: j+2, i-1:i+2]
+        neighbors = Utot[j_min-1: j_max+2, i_min-1:i_max+2]
         local_minimum = np.unravel_index(np.argmin(neighbors), neighbors.shape)
         new_i = i - 1 + local_minimum[1]
         new_j = j - 1 + local_minimum[0]
