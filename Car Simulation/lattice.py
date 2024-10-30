@@ -77,10 +77,10 @@ class Lattice:
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
 
-    def randomize(self):
+    def randomize(self, num):
         #self.addRobot(Robot(1, (3, 3), 10))
 
-        for _ in range(15):
+        for _ in range(num):
             self.addObstacle(Obstacle(rd(1, 2), (rd(0, self.num_cols), rd(0, self.num_rows))))
 
     def genObs(self):
@@ -133,7 +133,7 @@ class Lattice:
             dt = 1 / np.linalg.norm([vx, vy])
             next_point = current_point + dt*np.array([vx, vy])
             self.robot.coords = next_point
-            self.robot.direction = normalize_radians(np.arctan2(-vy, vx))
+            self.robot.direction = np.arctan2(-vy, vx)
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
