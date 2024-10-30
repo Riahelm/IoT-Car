@@ -3,7 +3,7 @@ import numpy as np
 from shapely import LineString, Point, Polygon
 from sphere import Sphere
 from matplotlib import pyplot as plt
-from util import bresenham, normalize_radians, getDistanceFromCoordinate
+from util import bresenham, normalize_radians, getDistanceFromCoordinate, get_bounded_indexes
 class Robot(Sphere):
     def __init__(self, coords, **kwargs):
         """
@@ -92,9 +92,8 @@ class Third_Paper_Robot (Robot):
             True if the robot is considered stuck, otherwise False.
         """
         # Get current robot position on the grid
-        i = min(max(int(self.coords[1]), 0), Utot.shape[1] - 1)
-        j = min(max(int(self.coords[0]), 0), Utot.shape[0] - 1)
-
+        i, j = get_bounded_indexes(self.coords, Utot.shape)
+        
         # Check if the robot is in a local minimum by comparing to neighbors
         neighbors = Utot[j-1: j+2, i-1:i+2]
         local_minimum = np.unravel_index(np.argmin(neighbors), neighbors.shape)
@@ -182,7 +181,7 @@ class Polygon_Robot(Third_Paper_Robot):
         containedPoints = [point for point in obs_list if polygon.contains(point)]
 
         if containedPoints:
-            best = min(containedPoints, key=lambda p : polygon.distance(p))
+            best = min(containedPoints, key=lambda p : Point(self.coords).distance(p))
             vision = getDistanceFromCoordinate(self.coords[1], self.coords[0], best.y, best.x)
             polygon = self.get_cone(vision, angle)
             
@@ -193,26 +192,44 @@ class Polygon_Robot(Third_Paper_Robot):
         return (found, polygon)
     
     def move(self, vy, vx, current_point, obstacleMap):
+        # Calculate the distance to move
         dt = (self.vision * self.scale) / np.linalg.norm([vx, vy])
-        next_point = current_point + dt*np.array([vx, vy])
+        next_point = current_point + dt * np.array([vx, vy])
+    
+        # Bound the coordinates to stay within map limits
 
         boundedX = np.clip(round(next_point[1]), 0, self.digitalMap.shape[0] - 1)
         boundedY = np.clip(round(next_point[0]), 0, self.digitalMap.shape[1] - 1)
         boundedNext = (boundedY, boundedX)
-
-        crossed = False
+    
+        # Create a line path from current position to target with a buffer
         line = LineString([self.coords, boundedNext]).buffer(self.radius)
-        for row, col in np.argwhere(obstacleMap):
-            obstacle = Point(col, row)
-            if line.distance(obstacle) < self.radius:
-                crossed = True
-                diam = 2 * self.radius
-                boundedNext = (col - diam, row - diam)
-                print("Went through an obstacle")
-
+        obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
+    
+        # Initialize crossed flag
+        crossed = False
+        
+        if obs_in_path:
+            best = min(obs_in_path, key=lambda x: Point(self.coords).distance(x))
+            
+            # Calculate the direction vector towards the obstacle
+            direction_vector = np.array([best.x - self.coords[1], best.y - self.coords[0]])
+            direction_vector = direction_vector / np.linalg.norm(direction_vector)
+            
+            # Set a distance to stop before the obstacle
+            stop_distance = self.radius  # Distance to stop before the obstacle
+            boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(best) - stop_distance),
+                           self.coords[1] + direction_vector[0] * (Point(self.coords).distance(best) - stop_distance))
+            
+            # Flag as crossed and print message
+            crossed = True
+            print("Went through an obstacle")
+    
+        # Update coordinates if no obstacle was crossed
         if not crossed:
             self.coords = boundedNext
             self.direction = np.arctan2(-vy, vx)
+        
         return boundedNext
 
     def get_cone(self, vision, angle):
