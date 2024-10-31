@@ -9,7 +9,6 @@ from   tqdm.auto import tqdm
 from robot import * 
 from goal import Goal 
 from obstacle import Obstacle 
-from shapely import Point, Polygon
 from util import get_bounded_indexes
 class Lattice:
     def __init__(self, rows: int, columns: int, robot: Robot, goal: Goal, **kwargs):
@@ -58,8 +57,6 @@ class Lattice:
         self.robot = robot
         [self.X, self.Y] = np.meshgrid(np.arange(columns), np.arange(rows))
         robot.addMap(self.X.shape)
-        self.Fx = np.zeros_like(self.X, dtype=float)
-        self.Fy = np.zeros_like(self.Y, dtype=float)
         self.goals = [goal]
         self.obstacleMap = np.zeros_like(self.X, dtype=bool)
         self.goal_attraction = float(kwargs.get('goal_attraction', 1/700.))
@@ -81,10 +78,6 @@ class Lattice:
 
         for _ in range(num):
             self.addObstacle(Obstacle(rd(1, 2), (rd(0, self.num_cols), rd(0, self.num_rows))))
-
-    def genObs(self):
-        t = self.X **2 - self.Y **2 < 50**2
-        self.obstacleMap[t] = True
 
     def getPotential(self):
       if len(self.goals) > 0:
@@ -149,11 +142,11 @@ class Lattice:
         #Update obstacles
         (obsY, obsX) = np.where(self.obstacleMap == True)
         for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='r', alpha=1)  # Use self.robot.tol for the radius
+            obstacle_patch = plt.Circle((x, y), 1, color='r', alpha=1)  # Use self.robot.tol for the radius
             ax.add_patch(obstacle_patch)
         (obsY, obsX) = np.where(self.robot.digitalMap == True)
         for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), self.robot.tol, color='y', alpha=0.2)  # Use self.robot.tol for the radius
+            obstacle_patch = plt.Circle((x, y), 1, color='y', alpha=0.2)  # Use self.robot.tol for the radius
             ax.add_patch(obstacle_patch)        
         # Update goals
         for goal in self.goals:
@@ -193,8 +186,8 @@ class Lattice:
         figsize = (num_cols * scale_factor, num_rows * scale_factor)
 
         # Create the figure with the calculated figsize
-        fig, ax = plt.subplots(figsize=figsize)
-
+        #fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots(figsize = (10,10))
         # Calculate the gradients of the potential field
         [fy, fx] = self.getForces()
 
@@ -420,7 +413,8 @@ class Polygon_Lattice(Third_Paper_Lattice):
         
             if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
-                self.robot.digitalMap[row + np.random.randint(0,3) - 1, col + np.random.randint(0,3) - 1] = True
+                x, y = get_bounded_indexes((row + np.random.randint(0,3) - 1, col + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
+                self.robot.digitalMap[x, y] = True
                 [gy, gx] = self.getForces()
 
             # NumPy arrays access grids by (row, column) so it is inverted
@@ -438,7 +432,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
         return route, forces, polys    
 
     @override
-    def animate(self, **kwargs):
+    def animate(self, i, **kwargs):
         """
         Animates the robot moving through the Lattice with the APF algorithm
         Optional parameters
@@ -500,8 +494,6 @@ class Polygon_Lattice(Third_Paper_Lattice):
             return [quiver]
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
-        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False)
+        ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False, interval = 1000 * i)
         writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
-        ani.save('Car.mp4', writer = writervideo)
-        
-        return HTML(ani.to_jshtml())
+        ani.save(f"Car Simulation/Results/Videos/Car_{i}.mp4", writer = writervideo)
