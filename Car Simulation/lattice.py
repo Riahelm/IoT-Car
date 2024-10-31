@@ -56,7 +56,7 @@ class Lattice:
         self.num_rows = rows
         self.num_cols = columns
         self.robot = robot
-        [self.X, self.Y] = np.meshgrid(np.arange(rows), np.arange(columns))
+        [self.X, self.Y] = np.meshgrid(np.arange(columns), np.arange(rows))
         robot.addMap(self.X.shape)
         self.Fx = np.zeros_like(self.X, dtype=float)
         self.Fy = np.zeros_like(self.Y, dtype=float)
