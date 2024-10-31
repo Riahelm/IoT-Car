@@ -395,26 +395,27 @@ class Polygon_Lattice(Third_Paper_Lattice):
     def calcPath(self, max_its):
         [gy, gx] = self.getForces()
         route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
-        forces = [[gy, gx]]
-        _, initPoly = self.robot.seek_obstacles(self.obstacleMap)
-        polys = [initPoly]
+        forces = []
+        polys = []
         row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
         vx = gx[row, col]
         vy = gy[row, col]
-        self.robot.direction = np.arctan2(-vy, vx)
 
         for _ in range(max_its):
             current_point = route[-1,:]
 
-            if self.goals[0].isTouching(self.robot):
-                print('Reached the goal !')
-                route = np.vstack( [route, current_point] )
-                break
-            
             (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
-                # Gradient returns y-axis and then x-axis
+
+            if self.goals[0].isTouching(self.robot):
+                print('Reached the goal !')
+                route = np.vstack( [route, current_point] )
+                forces.append([gy, gx])
+                polys.append(polysT)
+                break
+
+            # Gradient returns y-axis and then x-axis
             # y values go from top to bottom in NumPy arrays, need to negate to offset it
         
             if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
@@ -477,7 +478,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
             ax.clear()
 
             if i <= len(path):
-                self.robot.coords = path[i - 1]
+                self.robot.coords = path[i]
                 for polys in polygons[i]:
                     for poly in polys:
                         x, y = poly.exterior.xy
