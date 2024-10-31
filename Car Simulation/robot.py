@@ -16,7 +16,7 @@ class Robot(Sphere):
                  radius of the robot (default 1)
                  
         vision : float
-                 sensor max distance of the robot (default 6 * radius)
+                 sensor max distance of the robot (default radius * 6)
 
         tolerance: int
                    radius of newly added obstacles for increased performance (default radius * 3)
@@ -135,10 +135,10 @@ class Polygon_Robot(Third_Paper_Robot):
                  radius of the robot (default 1)
                  
         vision : float
-                 sensor max distance of the robot (default 6 * radius)
+                 sensor max distance of the robot (default radius * 6)
 
         tolerance: int
-                   radius of newly added obstacles for increased performance (default 2)
+                   radius of newly added obstacles for increased performance (default radius * 3)
         
         direction: degrees
                    initial direction of the robot (default 0)
@@ -222,7 +222,7 @@ class Polygon_Robot(Third_Paper_Robot):
             direction_vector = direction_vector / np.linalg.norm(direction_vector)
             
             # Set a distance to stop before the obstacle
-            stop_distance = 2 * self.radius  # Distance to stop before the obstacle
+            stop_distance = 2 * self.radius + self.tol  # Distance to stop before the obstacle
             boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(best) - stop_distance),
                            self.coords[1] + direction_vector[0] * (Point(self.coords).distance(best) - stop_distance))
             
