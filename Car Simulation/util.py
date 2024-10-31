@@ -1,5 +1,5 @@
 import numpy as np
-
+from   random import randint as rd
 def get_bounded_indexes(coords, shapes):
     i = np.clip(int(coords[1]), 0, shapes[0] - 1)
     j = np.clip(int(coords[0]), 0, shapes[1] - 1)
@@ -69,3 +69,38 @@ def bresenham(start: tuple[int, int], end: tuple[int, int]) -> list[tuple[int, i
     if swapped:
         points.reverse()
     return points
+
+def createConfig(sizes, num, max_radius):
+    """
+    Create a matrix with circular clusters (spheres) of 1's.
+    
+    Parameters:
+        sizes (tuple): Dimensions of the matrix (rows, cols).
+        num (int): Number of spheres to add.
+        max_radius (int): Maximum radius of each sphere.
+    """
+    matrix = np.zeros(sizes, dtype=int)
+    for _ in range(num):
+        # Random center point for the sphere
+        center_x = rd(0, sizes[1] - 1)
+        center_y = rd(0, sizes[0] - 1)
+        radius = rd(1, max_radius)
+
+        # Create the sphere by setting points within the radius to 1
+        for x in range(center_x - radius, center_x + radius + 1):
+            for y in range(center_y - radius, center_y + radius + 1):
+                # Check if (x, y) is within bounds and within the circle
+                if (0 <= x < sizes[1] and 0 <= y < sizes[0] and
+                        (x - center_x)**2 + (y - center_y)**2 <= radius**2):
+                    matrix[y, x] = 1
+
+    np.savetxt("Car Simulation/Results/matrix.txt", matrix, fmt='%d', delimiter=",")
+
+def loadConfig():
+    """
+    Load the configuration matrix from the text file.
+    
+    Returns:
+        np.ndarray: Loaded matrix of 1's and 0's.
+    """
+    return np.loadtxt("Car Simulation/Results/matrix.txt", dtype=int, delimiter=",")
