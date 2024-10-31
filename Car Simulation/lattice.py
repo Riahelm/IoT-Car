@@ -477,7 +477,7 @@ class Polygon_Lattice(Third_Paper_Lattice):
             ax.clear()
 
             if i <= len(path):
-                self.robot.coords = path[i]
+                self.robot.coords = path[i - 1]
                 for polys in polygons[i]:
                     for poly in polys:
                         x, y = poly.exterior.xy
