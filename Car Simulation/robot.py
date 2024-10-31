@@ -222,7 +222,7 @@ class Polygon_Robot(Third_Paper_Robot):
             direction_vector = direction_vector / np.linalg.norm(direction_vector)
             
             # Set a distance to stop before the obstacle
-            stop_distance = self.radius  # Distance to stop before the obstacle
+            stop_distance = 2 * self.radius  # Distance to stop before the obstacle
             boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(best) - stop_distance),
                            self.coords[1] + direction_vector[0] * (Point(self.coords).distance(best) - stop_distance))
             

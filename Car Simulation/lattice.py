@@ -428,8 +428,6 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 print("Got stuck")
                 self.robot.digitalMap[row, col] = True
                 [gy, gx] = self.getForces()
-                #gy[row, col] *= np.random.rand() - 0.5
-                #gx[row, col] *= np.random.rand() - 0.5 
 
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
