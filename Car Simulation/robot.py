@@ -25,13 +25,13 @@ class Robot(Sphere):
                    initial direction of the robot (default 0)
 
         sensor_angle: degrees
-                      fixed angular distance of sensors (default 45)
+                      fixed angular distance of sensors (default 30)
         """
         super().__init__(float(kwargs.get('radius', 1)), coords)
         self.vision = float(kwargs.get('vision', self.radius * 6))
         self.tol = round(kwargs.get('tolerance', 1))
         self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
-        self.sensor_angle = np.radians(float(kwargs.get('sensor_angle', 45)) % 360)
+        self.sensor_angle = np.radians(float(kwargs.get('sensor_angle', 30)) % 360)
 
     def addMap(self, mapShape):
         if len(mapShape) != 2:
@@ -152,16 +152,16 @@ class Polygon_Robot(Third_Paper_Robot):
                    initial direction of the robot (default 0)
 
         sensor_angle: degrees
-                      fixed angular distance of sensors (default 45)
+                      fixed angular distance of sensors (default 30)
         
         sensor_tolerance: degrees
-                          fixed angular cone of vision (default sensor_angle)
+                          fixed angular cone of vision (default 15)
         
         scale: float
                     up/down scaling value of step w.r.t vision (default 1, step = vision)
         """
         super().__init__(coords, **kwargs)
-        self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', self.sensor_angle)) % 360)
+        self.sensor_tolerance = np.radians(float(kwargs.get('sensor_tolerance', 15)) % 360)
         self.scale = float(kwargs.get('scale', self.vision))
 
     @override
@@ -211,28 +211,28 @@ class Polygon_Robot(Third_Paper_Robot):
     
         # Bound the coordinates to stay within map limits
 
-        boundedX = np.clip(round(next_point[1]), 0, self.digitalMap.shape[0] - 1)
-        boundedY = np.clip(round(next_point[0]), 0, self.digitalMap.shape[1] - 1)
+        boundedX = np.clip(round(next_point[1]), self.radius, self.digitalMap.shape[0] - self.radius - 1)
+        boundedY = np.clip(round(next_point[0]), self.radius, self.digitalMap.shape[1] - self.radius - 1)
         boundedNext = (boundedY, boundedX)
     
         # Create a line path from current position to target with a buffer
         line = LineString([self.coords, boundedNext]).buffer(self.radius)
-        obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
+        obs_in_path = [Point(col, row) for row, col in np.argwhere(self.digitalMap) if line.contains(Point(col, row))]
     
         # Initialize crossed flag
         crossed = False
         
         if obs_in_path:
-            best = min(obs_in_path, key=lambda x: Point(self.coords).distance(x))
+            closest = min(obs_in_path, key=lambda x: Point(self.coords).distance(x))
             
             # Calculate the direction vector towards the obstacle
-            direction_vector = np.array([best.x - self.coords[1], best.y - self.coords[0]])
+            direction_vector = np.array([closest.x - self.coords[1], closest.y - self.coords[0]])
             direction_vector = direction_vector / np.linalg.norm(direction_vector)
             
             # Set a distance to stop before the obstacle
-            stop_distance = 2 * self.radius + self.tol  # Distance to stop before the obstacle
-            boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(best) - stop_distance),
-                           self.coords[1] + direction_vector[0] * (Point(self.coords).distance(best) - stop_distance))
+            stop_distance = self.radius + self.tol  # Distance to stop before the obstacle
+            boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(closest) - stop_distance),
+                           self.coords[1] + direction_vector[0] * (Point(self.coords).distance(closest) - stop_distance))
             
             # Flag as crossed and print message
             crossed = True
