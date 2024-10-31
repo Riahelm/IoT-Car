@@ -399,10 +399,10 @@ class Polygon_Lattice(Third_Paper_Lattice):
         _, initPoly = self.robot.seek_obstacles(self.obstacleMap)
         polys = [initPoly]
         row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
-
         vx = gx[row, col]
         vy = gy[row, col]
         self.robot.direction = np.arctan2(-vy, vx)
+
         for _ in range(max_its):
             current_point = route[-1,:]
 
@@ -411,13 +411,6 @@ class Polygon_Lattice(Third_Paper_Lattice):
                 route = np.vstack( [route, current_point] )
                 break
             
-            # NumPy arrays access grids by (row, column) so it is inverted
-            row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
-
-            vx = gx[row, col]
-            vy = gy[row, col]
-            
-            next_point = self.robot.move(vy, vx, current_point, self.obstacleMap)
             (found, polysT) = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
@@ -426,8 +419,16 @@ class Polygon_Lattice(Third_Paper_Lattice):
         
             if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 print("Got stuck")
-                self.robot.digitalMap[row, col] = True
+                self.robot.digitalMap[row + np.random.randint(0,3) - 1, col + np.random.randint(0,3) - 1] = True
                 [gy, gx] = self.getForces()
+
+            # NumPy arrays access grids by (row, column) so it is inverted
+            row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
+
+            vx = gx[row, col]
+            vy = gy[row, col]
+            
+            next_point = self.robot.move(vy, vx, current_point, self.obstacleMap)
 
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
@@ -503,4 +504,3 @@ class Polygon_Lattice(Third_Paper_Lattice):
         ani.save('Car.mp4', writer = writervideo)
         
         return HTML(ani.to_jshtml())
-    
