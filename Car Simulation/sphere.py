@@ -2,7 +2,7 @@ from util import getDistanceFromCoordinate
 import numpy as np
 class Sphere:
     def __init__(self, radius, coords):
-        self.radius = radius
+        self.radius = int(radius)
         self.coords = np.array(coords[::-1])
 
     def get_distance(self, x, y) -> float:
