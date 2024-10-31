@@ -19,7 +19,7 @@ class Robot(Sphere):
                  sensor max distance of the robot (default radius * 6)
 
         tolerance: int
-                   radius of newly added obstacles for increased performance (default radius * 3)
+                   radius of newly added obstacles for increased performance (default 1)
         
         direction: degrees
                    initial direction of the robot (default 0)
@@ -29,7 +29,7 @@ class Robot(Sphere):
         """
         super().__init__(float(kwargs.get('radius', 1)), coords)
         self.vision = float(kwargs.get('vision', self.radius * 6))
-        self.tol = int(kwargs.get('tolerance', self.radius * 3))
+        self.tol = round(kwargs.get('tolerance', 1))
         self.direction = np.radians(float(kwargs.get('direction', 0)) % 360)
         self.sensor_angle = np.radians(float(kwargs.get('sensor_angle', 45)) % 360)
 
@@ -37,7 +37,11 @@ class Robot(Sphere):
         if len(mapShape) != 2:
             raise ValueError
         self.digitalMap = np.zeros(mapShape)
-
+        self.digitalMap[0, :] = True       # Set the top row to True
+        self.digitalMap[-1, :] = True      # Set the bottom row to True
+        self.digitalMap[:, 0] = True       # Set the left column to True
+        self.digitalMap[:, -1] = True      # Set the right column to True
+        
     def seek_obstacles(self, obstacleMap):
         found = False
         leftDir  = self.direction + self.sensor_angle
@@ -101,9 +105,13 @@ class Third_Paper_Robot (Robot):
 
         # Check if the robot is in a local minimum by comparing to neighbors
         neighbors = Utot[j_min-1: j_max+2, i_min-1:i_max+2]
-        local_minimum = np.unravel_index(np.argmin(neighbors), neighbors.shape)
-        new_i = i - 1 + local_minimum[1]
-        new_j = j - 1 + local_minimum[0]
+
+        new_i = i
+        new_j = j
+        if neighbors.size > 0:
+            local_minimum = np.unravel_index(np.argmin(neighbors), neighbors.shape)
+            new_i = i - 1 + local_minimum[1]
+            new_j = j - 1 + local_minimum[0]
 
         # If the robot is in a local minimum
         if (i, j) == (new_i, new_j):
@@ -138,7 +146,7 @@ class Polygon_Robot(Third_Paper_Robot):
                  sensor max distance of the robot (default radius * 6)
 
         tolerance: int
-                   radius of newly added obstacles for increased performance (default radius * 3)
+                   radius of newly added obstacles for increased performance (default 1)
         
         direction: degrees
                    initial direction of the robot (default 0)
