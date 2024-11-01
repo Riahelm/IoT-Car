@@ -387,12 +387,10 @@ class Polygon_Lattice(Third_Paper_Lattice):
     @override
     def calcPath(self, max_its):
         [gy, gx] = self.getForces()
-        route = np.vstack( [np.array(self.robot.coords), np.array(self.robot.coords)] )
+        route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         forces = []
         polys = []
-        row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
-        vx = gx[row, col]
-        vy = gy[row, col]
+
 
         for _ in range(max_its):
             current_point = route[-1,:]
@@ -403,27 +401,24 @@ class Polygon_Lattice(Third_Paper_Lattice):
 
             if self.goals[0].isTouching(self.robot):
                 print('Reached the goal !')
-                route = np.vstack( [route, current_point] )
                 forces.append([gy, gx])
                 polys.append(polysT)
                 break
 
-            # Gradient returns y-axis and then x-axis
-            # y values go from top to bottom in NumPy arrays, need to negate to offset it
-        
-            if (vx, vy) == (0, 0) or self.robot.isStuck(self.getPotential()):
-                print("Got stuck")
-                x, y = get_bounded_indexes((row + np.random.randint(0,3) - 1, col + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
-                self.robot.digitalMap[x, y] = True
-                [gy, gx] = self.getForces()
-
             # NumPy arrays access grids by (row, column) so it is inverted
             row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
 
-            vx = gx[row, col]
-            vy = gy[row, col]
+            # Gradient returns y-axis and then x-axis
+            # y values go from top to bottom in NumPy arrays, need to negate to offset it
+        
+            if (gx[row, col], gy[row, col]) == (0, 0) or self.robot.isStuck(self.getPotential()):
+                print("Got stuck")
+                x, y = get_bounded_indexes((col + np.random.randint(0,3) - 1, row + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
+                self.robot.digitalMap[x, y] = True
+                [gy, gx] = self.getForces()
+
             
-            next_point = self.robot.move(vy, vx, current_point, self.obstacleMap)
+            next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
 
             route = np.vstack( [route, next_point] )
             forces.append([gy, gx])
@@ -463,37 +458,35 @@ class Polygon_Lattice(Third_Paper_Lattice):
             return [quiver]
         
         def generate():
-          for i in tqdm(range(len(path) - 1)):
+          for i in tqdm(range(len(path))):
              if i % drop == 0:
                 yield i
 
         def update(i):
             
             ax.clear()
-
-            if i <= len(path):
-                self.robot.coords = path[i]
-                for polys in polygons[i]:
-                    for poly in polys:
-                        x, y = poly.exterior.xy
-                        plt.fill(x, y, alpha = 0.3, fc='green', label='Vision Cone')
+            self.robot.coords = path[i]
+            if i < (len(path) - 1):
+                x, y = LineString([self.robot.coords, path[i+1]]).buffer(self.robot.radius).exterior.xy
+                plt.fill(x, y, alpha = 0.5, fc='green', label='Path taken')
+            
+            row, col = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
+            vx = forces[i][1][row, col]
+            vy = forces[i][0][row, col]
+            
+            self.robot.direction = np.arctan2(-vy, vx) 
+            for polys in polygons[i]:
+                for poly in polys:
+                    x, y = poly.exterior.xy
+                    plt.fill(x, y, alpha = 0.3, fc='green', label='Vision Cone')
             
             self.movePatches(ax)
 
             quiver = ax.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], forces[i][1][::skip,::skip], forces[i][0][::skip,::skip], pivot = 'mid')
             
-            col, row = get_bounded_indexes(self.robot.coords, self.obstacleMap.shape[::-1])
-            vx = forces[i][1][row, col]
-            vy = forces[i][0][row, col]
-            
-            direction_vector = np.array([vx, vy])
-            
-            ax.arrow(self.robot.coords[0], self.robot.coords[1], direction_vector[0], direction_vector[1],
-                     head_width=self.robot.radius, head_length=self.robot.radius, fc='blue', ec='blue')
-            
             return [quiver]
 
         matplotlib.rcParams['animation.embed_limit'] = 2**128
         ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False, interval = 1000 * i)
-        writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
-        ani.save(f"Car Simulation/Results/Videos/Car_{i}.mp4", writer = writervideo)
+        writervideo = matplotlib.animation.FFMpegWriter(fps = 1 / i)
+        ani.save(f"Car Simulation/Tests/Videos/Car_{i}.mp4", writer = writervideo)
