@@ -218,9 +218,6 @@ class Polygon_Robot(Third_Paper_Robot):
         # Create a line path from current position to target with a buffer
         line = LineString([self.coords, boundedNext]).buffer(self.radius)
         obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
-    
-        # Initialize crossed flag
-        crossed = False
         
         if obs_in_path:
             closest = min(obs_in_path, key=lambda x: Point(self.coords).distance(x))
