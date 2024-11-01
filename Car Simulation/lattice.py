@@ -79,6 +79,7 @@ class Lattice:
     def resetRobot(self):
         self.robot.coords = self.robotStartCoords
         self.robot.direction = self.robotStartDirection
+        self.robot.addMap(self.X.shape)
 
     def randomize(self, num):
 
@@ -283,7 +284,8 @@ class Lattice:
       rescaleD = (d/100.) + 1
       Urep = self.obstacle_repulsion * ((1./rescaleD - 1/self.safe_distance)**2)
       Urep [rescaleD > self.safe_distance] = 0
-      return Uatt + Urep
+      
+      return self.getPotential() + Urep 
     
     def drawFullForce(self, skip):
       
@@ -291,7 +293,7 @@ class Lattice:
       [fy, fx] = np.gradient(-self.getWholePotential())
       plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
       self.movePatches(ax)
-
+      return fig, ax
 
 
 class Second_Paper_Lattice(Lattice):
