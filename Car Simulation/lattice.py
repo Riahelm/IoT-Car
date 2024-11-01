@@ -54,6 +54,8 @@ class Lattice:
         
         self.num_rows = rows
         self.num_cols = columns
+        self.robotStartCoords = robot.coords
+        self.robotStartDirection = robot.direction
         self.robot = robot
         [self.X, self.Y] = np.meshgrid(np.arange(columns), np.arange(rows))
         robot.addMap(self.X.shape)
@@ -73,6 +75,10 @@ class Lattice:
         if isinstance(o, Obstacle) and 0 <= x < xs and 0 <= y < ys:
             t = ((self.X - o.coords[0])**2 + (self.Y - o.coords[1])**2) < o.radius**2
             self.obstacleMap [t] = True
+
+    def resetRobot(self):
+        self.robot.coords = self.robotStartCoords
+        self.robot.direction = self.robotStartDirection
 
     def randomize(self, num):
 
@@ -156,37 +162,7 @@ class Lattice:
             ax.add_patch(goal.patch)
 
     def draw(self, skip):
-        # Get the screen dimensions in pixels and DPI (dots per inch)
-        manager = plt.get_current_fig_manager()
-        screen_width_px = manager.canvas.get_width_height()[0]
-        screen_height_px = manager.canvas.get_width_height()[1]
-        
-        # Get screen DPI
-        dpi = plt.rcParams['figure.dpi']
-        
-        # Convert screen size to inches
-        screen_width_in = screen_width_px / dpi
-        screen_height_in = screen_height_px / dpi
 
-        # Calculate the number of rows and columns in the lattice
-        num_rows, num_cols = self.X.shape
-        
-        # Target figure size to be a percentage of the screen size
-        width_ratio = 0.8  # Use 80% of the screen width
-        height_ratio = 0.8  # Use 80% of the screen height
-
-        # Calculate scale factors for both width and height
-        scale_factor_x = (screen_width_in * width_ratio) / num_cols
-        scale_factor_y = (screen_height_in * height_ratio) / num_rows
-
-        # Use the smaller of the two scale factors to ensure the figure fits on the screen
-        scale_factor = min(scale_factor_x, scale_factor_y)
-
-        # Set figsize proportional to the grid size, adjusted by the scale factor
-        figsize = (num_cols * scale_factor, num_rows * scale_factor)
-
-        # Create the figure with the calculated figsize
-        #fig, ax = plt.subplots(figsize=figsize)
         fig, ax = plt.subplots(figsize = (10,10))
         # Calculate the gradients of the potential field
         [fy, fx] = self.getForces()
@@ -199,7 +175,7 @@ class Lattice:
 
         return fig, ax
 
-    def plotPath(self, **kwargs):
+    def plotPath(self, i, alpha, **kwargs):
         """
         Plots to screen path taken by robot.
         
@@ -224,8 +200,7 @@ class Lattice:
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
         plt.xlabel('X')
         plt.ylabel('Y')
-        plt.show()
-        plt.close()
+        plt.savefig(f"Car Simulation/Tests/Results/Test_{i}, alpha: {alpha}", format='png', bbox_inches = 'tight')
 
     def animate(self, **kwargs):
         """
@@ -311,7 +286,8 @@ class Lattice:
       return Uatt + Urep
     
     def drawFullForce(self, skip):
-      fig, ax = plt.subplots(figsize=(12, 8))
+      
+      fig, ax = plt.subplots(figsize=(10, 10))
       [fy, fx] = np.gradient(-self.getWholePotential())
       plt.quiver(self.X[::skip,::skip], self.Y[::skip,::skip], fx[::skip,::skip], fy[::skip,::skip], pivot = 'mid')
       self.movePatches(ax)
