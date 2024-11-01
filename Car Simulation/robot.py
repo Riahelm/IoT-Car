@@ -206,7 +206,7 @@ class Polygon_Robot(Third_Paper_Robot):
     
     def move(self, vy, vx, current_point, obstacleMap):
         # Calculate the distance to move
-        dt = (self.vision * self.scale) / np.linalg.norm([vx, vy])
+        dt = ((self.vision - self.radius) * self.scale) / np.linalg.norm([vx, vy])
         next_point = current_point + dt * np.array([vx, vy])
     
         # Bound the coordinates to stay within map limits
@@ -217,7 +217,7 @@ class Polygon_Robot(Third_Paper_Robot):
     
         # Create a line path from current position to target with a buffer
         line = LineString([self.coords, boundedNext]).buffer(self.radius)
-        obs_in_path = [Point(col, row) for row, col in np.argwhere(self.digitalMap) if line.contains(Point(col, row))]
+        obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
     
         # Initialize crossed flag
         crossed = False
@@ -234,15 +234,13 @@ class Polygon_Robot(Third_Paper_Robot):
             boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(closest) - stop_distance),
                            self.coords[1] + direction_vector[0] * (Point(self.coords).distance(closest) - stop_distance))
             
-            # Flag as crossed and print message
-            crossed = True
-            print("Went through an obstacle")
+            print("Touched an obstacle")
     
         # Update coordinates if no obstacle was crossed
-        if not crossed:
-            self.coords = boundedNext
-            self.direction = np.arctan2(-vy, vx)
         
+        self.coords = boundedNext
+        
+        self.direction = np.arctan2(-vy, vx)
         return boundedNext
 
     def get_cone(self, vision, angle):
@@ -256,5 +254,10 @@ class Polygon_Robot(Third_Paper_Robot):
         vertices = [tuple(self.coords), tuple(left_point), tuple(right_point)]
         return Polygon(vertices)
     
-
-
+    def get_vision(self):
+        leftDir  = normalize_radians(self.direction - self.sensor_angle)
+        rightDir = normalize_radians(self.direction + self.sensor_angle)
+        polyL = self.get_cone(self.vision, leftDir)
+        polyC = self.get_cone(self.vision, self.direction)
+        polyR = self.get_cone(self.vision, rightDir)
+        return (polyL, polyC, polyR)
