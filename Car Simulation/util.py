@@ -1,8 +1,9 @@
 import numpy as np
 from   random import randint as rd
+
 def get_bounded_indexes(coords, shapes):
-    i = np.clip(int(coords[1]), 0, shapes[0] - 1)
-    j = np.clip(int(coords[0]), 0, shapes[1] - 1)
+    i = np.clip(int(np.round(coords[1])), 0, shapes[0] - 1)
+    j = np.clip(int(np.round(coords[0])), 0, shapes[1] - 1)
     return (i, j)
 
 def normalize_radians(angle):
@@ -94,7 +95,7 @@ def createConfig(sizes, num, max_radius):
                         (x - center_x)**2 + (y - center_y)**2 <= radius**2):
                     matrix[y, x] = 1
 
-    np.savetxt("Car Simulation/Results/matrix.txt", matrix, fmt='%d', delimiter=",")
+    np.savetxt("Car Simulation/Tests/matrix.txt", matrix, fmt='%d', delimiter=",")
 
 def loadConfig():
     """
@@ -103,4 +104,4 @@ def loadConfig():
     Returns:
         np.ndarray: Loaded matrix of 1's and 0's.
     """
-    return np.loadtxt("Car Simulation/Results/matrix.txt", dtype=int, delimiter=",")
+    return np.loadtxt("Car Simulation/Tests/matrix.txt", dtype=int, delimiter=",")
