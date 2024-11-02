@@ -141,7 +141,6 @@ class Lattice:
             # Remove the previous robot circle if it exists
             if hasattr(self, 'robot_patch'):
                 self.robot_patch.remove()
-
             # Add the updated robot circle at the new position
             self.robot_patch = plt.Circle(self.robot.coords, self.robot.radius, color='b', alpha=0.5)
             ax.add_patch(self.robot_patch)
@@ -149,11 +148,11 @@ class Lattice:
         #Update obstacles
         (obsY, obsX) = np.where(self.obstacleMap == True)
         for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), 1, color='r', alpha=1)  # Use self.robot.tol for the radius
+            obstacle_patch = plt.Circle((x, y), 0.65, color='r', alpha=1)
             ax.add_patch(obstacle_patch)
         (obsY, obsX) = np.where(self.robot.digitalMap == True)
         for x, y in zip(obsX, obsY):
-            obstacle_patch = plt.Circle((x, y), 1, color='y', alpha=0.2)  # Use self.robot.tol for the radius
+            obstacle_patch = plt.Circle((x, y), 1, color='y', alpha=0.2)
             ax.add_patch(obstacle_patch)        
         # Update goals
         for goal in self.goals:
@@ -269,9 +268,6 @@ class Lattice:
         ani = matplotlib.animation.FuncAnimation(fig, update, frames=generate, init_func= init, cache_frame_data=False, blit = True, repeat = False)
         writervideo = matplotlib.animation.FFMpegWriter(fps = 60)
         ani.save('Car.mp4', writer = writervideo)
-        
-        return HTML(ani.to_jshtml())
-    
 
     
     ## DEBUGGING METHODS ##
