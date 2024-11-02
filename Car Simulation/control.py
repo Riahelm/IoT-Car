@@ -96,53 +96,30 @@ class Control_Lattice(Polygon_Lattice):
         max_its: int
                  max number of Euler steps to generate (default 400)
         
-
+        full: bool
+              changes function to use whole potential field
         """
         skip = kwargs.get('skip', 10)
         max_its = kwargs.get('max_its', 400)
+        full = bool(kwargs.get('full', False))
         start = self.robot.coords
         goal = self.goals[0].coords
-        reached, route = self.calcPath(max_its)
-        fig, ax = self.draw(skip)
-        plt.plot(start[0], start[1], 'bo', markersize=10)
-        plt.plot(goal[0], goal[1], 'go', markersize=10)
+        
+        if full:
+            reached, route = self.calcFullPath(max_its)
+            fig, ax = self.drawFullForce(skip)
+            savefile = f"Car Simulation/Tests/Results/Full/"
+        else:
+            reached, route = self.calcPath(max_its)
+            fig, ax = self.draw(skip)
+            savefile = f"Car Simulation/Tests/Results/Partial/"
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
         plt.title(f"alpha = {alpha}")
         plt.xlabel('X')
         plt.ylabel('Y')
-        plt.savefig(f"Car Simulation/Tests/Results/Reached_{reached}_alpha_is_{alpha}.png", bbox_inches = 'tight')
+        plt.savefig(savefile + f"R_{reached}_α_{alpha}.png", bbox_inches = 'tight')
         plt.close(fig)
-        return reached, route
-
-    def plotFullPath(self, alpha, **kwargs):
-        """
-        Plots to screen path taken by robot.
-        
-        \n Optional parameters
-        -------------------
-        skip: int
-              up/down scaling of the quiver plot for animating
-
-        max_its: int
-                 max number of Euler steps to generate (default 400)
-        
-
-        """
-        skip = kwargs.get('skip', 10)
-        max_its = kwargs.get('max_its', 400)
-        start = self.robot.coords
-        goal = self.goals[0].coords
-        reached, route = self.calcFullPath(max_its)
-        fig, ax = self.drawFullForce(skip)
-        plt.plot(start[0], start[1], 'bo', markersize=10)
-        plt.plot(goal[0], goal[1], 'go', markersize=10)
-        plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
-        plt.title(f"alpha = {alpha}")
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.savefig(f"Car Simulation/Tests/Results/Full_Reached_{reached}_alpha_is_{alpha}.png", bbox_inches = 'tight')
-        plt.close(fig)
-        return reached, route
+        return reached
 
     @override
     def calcPath(self, max_its) -> tuple[bool, list]:
