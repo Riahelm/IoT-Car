@@ -1,5 +1,5 @@
 @echo off
-set "folder_path=%cd%\Tests/Results"
+set "folder_path=%cd%\Car Simulation/Tests/Results"
 
 echo Deleting all files in %folder_path%...
 
