@@ -71,7 +71,7 @@ def bresenham(start: tuple[int, int], end: tuple[int, int]) -> list[tuple[int, i
         points.reverse()
     return points
 
-def createConfig(sizes, num, max_radius):
+def createConfig(sizes, robot_coords, goal_coords, num, max_radius):
     """
     Create a matrix with circular clusters (spheres) of 1's.
     
@@ -92,7 +92,8 @@ def createConfig(sizes, num, max_radius):
             for y in range(center_y - radius, center_y + radius + 1):
                 # Check if (x, y) is within bounds and within the circle
                 if (0 <= x < sizes[1] and 0 <= y < sizes[0] and
-                        (x - center_x)**2 + (y - center_y)**2 <= radius**2):
+                        (x - center_x)**2 + (y - center_y)**2 <= radius**2 and
+                        (x, y) != robot_coords and (x, y) != goal_coords):
                     matrix[y, x] = 1
 
     np.savetxt("Car Simulation/Tests/matrix.txt", matrix, fmt='%d', delimiter=",")
