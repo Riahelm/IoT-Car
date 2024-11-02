@@ -1,3 +1,4 @@
+import time
 from typing import override
 import numpy as np
 from matplotlib import pyplot as plt
@@ -59,7 +60,7 @@ class Control_Robot(Polygon_Robot):
         boundedNext = (boundedY, boundedX)
     
         # Create a line path from current position to target with a buffer
-        line = LineString([self.coords, boundedNext]).buffer(self.radius)
+        line = LineString([self.coords, boundedNext]).buffer(2 * self.radius)
         obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
         
         if obs_in_path:
@@ -70,7 +71,7 @@ class Control_Robot(Polygon_Robot):
             direction_vector = direction_vector / np.linalg.norm(direction_vector)
             
             # Set a distance to stop before the obstacle
-            stop_distance = self.radius + self.tol  # Distance to stop before the obstacle
+            stop_distance = 2 * self.radius # Distance to stop before the obstacle
             boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(closest) - stop_distance),
                            self.coords[1] + direction_vector[0] * (Point(self.coords).distance(closest) - stop_distance))
             
@@ -78,6 +79,12 @@ class Control_Robot(Polygon_Robot):
         
         self.direction = np.arctan2(-vy, vx)
         return boundedNext    
+
+
+
+
+
+
 
 class Control_Lattice(Polygon_Lattice):
     def __init__(self, rows: int, columns: int, robot: Control_Robot, goal: Goal, **kwargs):
@@ -102,15 +109,13 @@ class Control_Lattice(Polygon_Lattice):
         skip = kwargs.get('skip', 10)
         max_its = kwargs.get('max_its', 400)
         full = bool(kwargs.get('full', False))
-        start = self.robot.coords
-        goal = self.goals[0].coords
-        
+
         if full:
-            reached, route = self.calcFullPath(max_its)
+            reached, route, obs, time = self.calcFullPath(max_its)
             fig, ax = self.drawFullForce(skip)
             savefile = f"Car Simulation/Tests/Results/Full/"
         else:
-            reached, route = self.calcPath(max_its)
+            reached, route, obs, time = self.calcPath(max_its)
             fig, ax = self.draw(skip)
             savefile = f"Car Simulation/Tests/Results/Partial/"
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
@@ -119,22 +124,25 @@ class Control_Lattice(Polygon_Lattice):
         plt.ylabel('Y')
         plt.savefig(savefile + f"R_{reached}_α_{alpha}.png", bbox_inches = 'tight')
         plt.close(fig)
-        return reached
+        return reached, len(route) * self.robot.scale, obs, time
 
     @override
-    def calcPath(self, max_its) -> tuple[bool, list]:
+    def calcPath(self, max_its):
+        start_time = time.time()
         [gy, gx] = self.getForces()
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
-
+        res = False
         for _ in range(max_its):
             current_point = route[-1,:]
 
             found = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 [gy, gx] = self.getForces()
+                
 
             if self.goals[0].isTouching(self.robot):
-                return True, route
+                res = True
+                break
 
             # NumPy arrays access grids by (row, column) so it is inverted
             row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
@@ -152,17 +160,22 @@ class Control_Lattice(Polygon_Lattice):
 
             route = np.vstack( [route, next_point] )
 
-        return False, route
+        obs_count = len([obs for obsX in self.robot.digitalMap[:-1:,:-1:] for obs in obsX if obs])
 
-    def calcFullPath(self, max_its) -> bool:
+        return res, route, obs_count, time.time() - start_time
+
+    def calcFullPath(self, max_its):
+        start_time = time.time()
         [gy, gx] = np.gradient(-self.getWholePotential())
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
-
+        obs_count = len([obs for obsX in self.obstacleMap for obs in obsX if obs])
+        res = False
         for _ in range(max_its):
             current_point = route[-1,:]
 
             if self.goals[0].isTouching(self.robot):
-                return True, route
+                res = True
+                break
 
             # NumPy arrays access grids by (row, column) so it is inverted
             row, col = get_bounded_indexes(current_point, self.obstacleMap.shape[::-1])
@@ -179,4 +192,4 @@ class Control_Lattice(Polygon_Lattice):
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
 
             route = np.vstack( [route, next_point] )
-        return False, route
+        return res, route, obs_count, time.time() - start_time
