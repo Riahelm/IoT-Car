@@ -158,7 +158,6 @@ class Control_Lattice(Polygon_Lattice):
                 x, y = get_bounded_indexes((col + np.random.randint(0,3) - 1, row + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
                 self.robot.digitalMap[x, y] = True
                 [gy, gx] = self.getForces()
-
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
 
