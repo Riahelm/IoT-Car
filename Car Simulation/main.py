@@ -1,5 +1,8 @@
 import os
 import subprocess
+import numpy as np
+from matplotlib import pyplot as plt
+from tqdm.auto import tqdm
 from lattice import Polygon_Lattice as PL
 from robot import Polygon_Robot as PR
 from control import Control_Lattice
@@ -7,6 +10,61 @@ from control import Control_Robot
 from goal import Goal
 from util import createConfig, loadConfig
 
+def save_plot(alphas, string, data):
+    plt.plot(alphas, data, marker='o', linestyle='-', color='skyblue', markersize=8)
+    plt.xlabel('Alpha')
+    plt.ylabel(string)
+    plt.xticks(rotation=45)
+    plt.grid(True)  # Optional: add grid for better readability
+    plt.tight_layout()
+    plt.savefig(f"Car Simulation/Tests/Results/Images/{string}.png")
+    plt.close()
+
+def plot_data(alphas, **kwargs):
+    full = bool(kwargs.get('full', False))
+    filenames = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
+
+
+    avg_results = []
+    avg_steps = []
+    avg_obstacles = []
+    avg_times = []
+    for file_path in filenames:
+        if full:
+            file_path = file_path + f"_Full"
+        with open(file_path, 'r') as file:
+            # Read and parse the data
+            lines = file.readlines()
+
+            # Prepare lists to store data
+            results = []
+            steps = []
+            obstacles = []
+            times = []
+
+            for line in lines[1:]:
+                parts = line.strip().split('|')
+                if len(parts) >= 4:  # Ensure there are enough parts
+                    results.append(int(parts[0].strip()))
+                    steps.append(int(parts[1].strip()))
+                    obstacles.append(int(parts[2].strip()))
+                    times.append(float(parts[3].strip()))
+
+            avg_results.append(sum(results) * 100./len(results))
+            avg_steps.append(sum(steps)/len(steps))
+            avg_obstacles.append(sum(obstacles)/len(obstacles))
+            avg_times.append(sum(times)/len(times))
+    
+    if full:
+        save_plot(alphas, "Full Average Success Percentage",   avg_results)
+        save_plot(alphas, "Full Average Steps",                avg_steps)
+        save_plot(alphas, "Full Average Time to compute, (s)", avg_times)
+    else:
+        save_plot(alphas, "Partial Average Success Percentage",   avg_results)
+        save_plot(alphas, "Partial Average Steps",                avg_steps)
+        save_plot(alphas, "Partial Average Obstacles Seen",       avg_obstacles)
+        save_plot(alphas, "Partial Average Time to compute, (s)", avg_times)
+        
 def setup_files(alphas):
 
     files = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
@@ -67,13 +125,16 @@ lat_size = 100
 robot_radius = 2
 obstacle_max_radius = 2
 obstacle_count = 10
-exp_count = 20
+exp_count = 100
 robot_coords = (lat_size - 2 * robot_radius, 1 + 2 * robot_radius)
 goal_coords = (0 + lat_size/10,lat_size - lat_size/10)
 
 subprocess.run(["cleanup.bat"], shell= False)
 
-setup_files(alphas)
-for i in range(exp_count):
-    gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius)
-    
+#setup_files(alphas)
+
+#for i in tqdm(range(exp_count)):
+#    gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius)
+
+plot_data(alphas)
+plot_data(alphas, full = True)
