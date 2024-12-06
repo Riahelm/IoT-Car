@@ -64,21 +64,7 @@ class Control_Robot(Polygon_Robot):
         obs_in_path = [Point(col, row) for row, col in np.argwhere(obstacleMap) if line.contains(Point(col, row))]
         
         if obs_in_path:
-            closest = min(obs_in_path, key=lambda x: Point(self.coords).distance(x))
-            
-            # Calculate the direction vector towards the obstacle
-            direction_vector = np.array([closest.x - self.coords[1], closest.y - self.coords[0]])
-            norm = np.linalg.norm(direction_vector) 
-            if norm != 0:
-                direction_vector = direction_vector / norm
-            else:
-                direction_vector = np.zeros_like(direction_vector)
-            
-            # Set a distance to stop before the obstacle
-            stop_distance = 2 * self.radius # Distance to stop before the obstacle
-            boundedNext = (self.coords[0] + direction_vector[1] * (Point(self.coords).distance(closest) - stop_distance),
-                           self.coords[1] + direction_vector[0] * (Point(self.coords).distance(closest) - stop_distance))
-            
+            return None
         self.coords = boundedNext
         
         self.direction = np.arctan2(-vy, vx)
@@ -160,7 +146,9 @@ class Control_Lattice(Polygon_Lattice):
                 [gy, gx] = self.getForces()
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
-
+            if next_point == None:
+                print("Obstacle hit. Finishing simulation")
+                return False, route, 0, time.time() - start_time
             route = np.vstack( [route, next_point] )
 
         final_time = time.time() - start_time
@@ -173,6 +161,7 @@ class Control_Lattice(Polygon_Lattice):
         [gy, gx] = np.gradient(-self.getWholePotential())
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         res = False
+        obs_count = len([obs for obsX in self.obstacleMap for obs in obsX if obs])
         for _ in range(max_its):
             current_point = route[-1,:]
 
@@ -194,9 +183,9 @@ class Control_Lattice(Polygon_Lattice):
             
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
-
+            if next_point == None:
+                return False, route, 0, time.time() - start_time
             route = np.vstack( [route, next_point] )
 
         final_time = time.time() - start_time
-        obs_count = len([obs for obsX in self.obstacleMap for obs in obsX if obs])
         return res, route, obs_count, final_time
