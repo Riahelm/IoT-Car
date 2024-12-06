@@ -1,6 +1,6 @@
 import numpy as np
 from   random import randint as rd
-
+import math
 def get_bounded_indexes(coords, shapes):
     i = np.clip(int(np.round(coords[1])), 0, shapes[0] - 1)
     j = np.clip(int(np.round(coords[0])), 0, shapes[1] - 1)
@@ -15,6 +15,29 @@ def normalize_radians(angle):
 
 def getDistanceFromCoordinate(x, y, x2, y2) -> float:
     return np.sqrt((x - x2)**2 + (y - y2)**2)
+
+def calculate_traveled_distance(coords):
+    """
+    Calculate the total traveled distance given a list of 2D coordinates.
+    
+    Args:
+        coords (list of tuple): A list of 2D coordinates (x, y).
+    
+    Returns:
+        float: The total traveled distance.
+    """
+    if len(coords) < 2:
+        return 0  # No distance to calculate if less than 2 points.
+    
+    total_distance = 0
+    for i in range(1, len(coords)):
+        x1, y1 = coords[i - 1]
+        x2, y2 = coords[i]
+        distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        total_distance += distance
+    
+    return total_distance
+
 
 def bresenham(start: tuple[int, int], end: tuple[int, int]) -> list[tuple[int, int]]:
     """Return a list of coordinates from `start` to `end` including both endpoints.
