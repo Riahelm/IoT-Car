@@ -131,10 +131,10 @@ goal_coords = (0 + lat_size/10,lat_size - lat_size/10)
 
 subprocess.run(["cleanup.bat"], shell= False)
 
-#setup_files(alphas)
+setup_files(alphas)
 
 #for i in tqdm(range(exp_count)):
 #    gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius)
 
-plot_data(alphas)
-plot_data(alphas, full = True)
+#plot_data(alphas)
+#plot_data(alphas, full = True)
