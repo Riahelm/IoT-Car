@@ -68,18 +68,23 @@ def plot_data(alphas, **kwargs):
 def setup_files(alphas):
 
     files = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
+    control_file = f"Car Simulation/Tests/Results/Data/Exp_0.05_Full"
+
+    try:
+        os.remove(control_file)
+    except FileNotFoundError:
+        pass
+    with open(control_file, 'a') as f:
+        f.write(f"{'Result':<15}|{'Steps':<15}|{'Obstacles':<15}|Time\n")
+
     for file in files:
         try:
             os.remove(file) # Delete file
-            os.remove(file + "_Full")
         except FileNotFoundError:
             pass    
-
         with open(file, 'a') as f:
             f.write(f"{'Result':<15}|{'Steps':<15}|{'Obstacles':<15}|Time\n")
 
-        with open(file + "_Full", 'a') as f:
-            f.write(f"{'Result':<15}|{'Steps':<15}|{'Obstacles':<15}|Time\n")
 
 def save_data(filename, data):
     # Open the file in append mode
@@ -100,24 +105,40 @@ def gen_animations(alphas, lat_size, obstacle_count):
         lat.obstacleMap = loadConfig()
         lat.animate(i= alpha, skip = 1, max_its = 100, drop = 1)
 
-def gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius):
-
-    vision = lat_size/5
+def gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius, max_its):
+    vision = lat_size / 5
     createConfig((lat_size, lat_size), robot_coords, goal_coords, obstacle_count, obstacle_max_radius)
 
+    # Initialize the "full experiment" first
+    filename_full = f"Car Simulation/Tests/Results/Data/Exp_0.05_Full"
+    radius = robot_radius
+    robot = Control_Robot(robot_coords, radius=radius, vision=vision, sensor_tolerance=15, scale=0.05, tolerance=1)
+    radius = lat_size / 10
+    lat = Control_Lattice(lat_size, lat_size, robot, Goal(radius, goal_coords), safe_distance=1 + 0.075)
+    lat.obstacleMap = loadConfig()
+
+    # Run the full experiment
+    reached, route_len, obstacles, time = lat.plotPath(i, 0.05, skip=1, max_its=max_its, full=True)
+    save_data(filename_full, (reached, route_len, obstacles, time))
+
+    # If the goal is not reached in the full experiment, skip further tests
+    if not reached:
+       return
+
+    # Perform experiments for other alphas if the full experiment succeeded
     for alpha in alphas:
         filename = f"Car Simulation/Tests/Results/Data/Exp_{alpha}"
         
         radius = robot_radius
-        robot = Control_Robot(robot_coords, radius = radius, vision = vision, sensor_tolerance = 15, scale = alpha, tolerance=1)
-        radius = lat_size/10
-        lat = Control_Lattice(lat_size, lat_size, robot, Goal(radius, goal_coords), safe_distance = 1 + 0.075)
+        robot = Control_Robot(robot_coords, radius=radius, vision=vision, sensor_tolerance=15, scale=alpha, tolerance=1)
+        radius = lat_size / 10
+        lat = Control_Lattice(lat_size, lat_size, robot, Goal(radius, goal_coords), safe_distance=1 + 0.075)
         lat.obstacleMap = loadConfig()
-        data = lat.plotPath(i, alpha, skip = 1, max_its = 200)
+
+        # Run the experiment and save data
+        reached, route_len, obstacles, time = lat.plotPath(i, alpha, skip=1, max_its=max_its)
+        save_data(filename, (reached, route_len, obstacles, time))
         lat.resetRobot()
-        save_data(filename, data)
-        data = lat.plotPath(i, alpha, skip = 1, max_its = 200, full = True) 
-        save_data(filename + f"_Full", data)
 
 
 alphas = [1, 0.5, 0.25, 0.1]
@@ -128,13 +149,13 @@ obstacle_count = 10
 exp_count = 100
 robot_coords = (lat_size - 2 * robot_radius, 1 + 2 * robot_radius)
 goal_coords = (0 + lat_size/10,lat_size - lat_size/10)
-
+max_its = 350
 subprocess.run(["cleanup.bat"], shell= False)
 
 setup_files(alphas)
 
-#for i in tqdm(range(exp_count)):
-#    gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius)
+for i in tqdm(range(exp_count)):
+    gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius, max_its)
 
-#plot_data(alphas)
-#plot_data(alphas, full = True)
+plot_data(alphas)
+plot_data([0.01], full = True)
