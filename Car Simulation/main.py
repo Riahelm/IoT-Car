@@ -158,4 +158,4 @@ for i in tqdm(range(exp_count)):
     gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obstacle_count, obstacle_max_radius, max_its)
 
 plot_data(alphas)
-plot_data([0.01], full = True)
+plot_data([0.05], full = True)
