@@ -24,11 +24,11 @@ def plot_data(alphas, **kwargs):
     full = bool(kwargs.get('full', False))
     filenames = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
 
-
     avg_results = []
     avg_steps = []
-    avg_obstacles = []
+    avg_calculations = []
     avg_times = []
+
     for file_path in filenames:
         if full:
             file_path = file_path + f"_Full"
@@ -38,33 +38,71 @@ def plot_data(alphas, **kwargs):
 
             # Prepare lists to store data
             results = []
+            
             steps = []
-            obstacles = []
+            calculations = []
             times = []
 
             for line in lines[1:]:
                 parts = line.strip().split('|')
                 if len(parts) >= 4:  # Ensure there are enough parts
-                    results.append(int(parts[0].strip()))
-                    steps.append(int(parts[1].strip()))
-                    obstacles.append(int(parts[2].strip()))
-                    times.append(float(parts[3].strip()))
+                    has_reached = int(parts[0].strip())
+                    results.append(has_reached)
+                    if has_reached:
+                        steps.append(float(parts[1].strip()))
+                        calculations.append(int(parts[2].strip()))
+                        times.append(float(parts[3].strip()))
 
             avg_results.append(sum(results) * 100./len(results))
             avg_steps.append(sum(steps)/len(steps))
-            avg_obstacles.append(sum(obstacles)/len(obstacles))
+            avg_calculations.append(sum(calculations)/len(calculations))
             avg_times.append(sum(times)/len(times))
     
     if full:
-        save_plot(alphas, "Full Average Success Percentage",   avg_results)
-        save_plot(alphas, "Full Average Steps",                avg_steps)
-        save_plot(alphas, "Full Average Time to compute, (s)", avg_times)
+        save_plot(alphas, "Control Average Distance",             avg_steps)
+        save_plot(alphas, "Control Average Calculations",         avg_calculations)
+        save_plot(alphas, "Control Average Time to compute, (s)", avg_times)
     else:
-        save_plot(alphas, "Partial Average Success Percentage",   avg_results)
-        save_plot(alphas, "Partial Average Steps",                avg_steps)
-        save_plot(alphas, "Partial Average Obstacles Seen",       avg_obstacles)
-        save_plot(alphas, "Partial Average Time to compute, (s)", avg_times)
-        
+        save_plot(alphas, "Average Success Percentage",   avg_results)
+        save_plot(alphas, "Average Distance",             avg_steps)
+        save_plot(alphas, "Average Calculations",         avg_calculations)
+        save_plot(alphas, "Average Time to compute, (s)", avg_times)
+
+def plot_distance(alphas, dt):
+    filenames = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
+    control_file = f"Car Simulation/Tests/Results/Data/Exp_{dt}_Full"
+    
+    # Calculate the optimal path distance
+    control_steps = []
+    with open(control_file, 'r') as file:
+        lines = file.readlines()
+        steps = []
+        for line in lines[1:]:
+            parts = line.strip().split('|')
+            if len(parts) >= 4:  # Ensure there are enough parts
+                has_reached = int(parts[0].strip())
+                if has_reached:
+                    steps.append(float(parts[1].strip()))
+        control_steps.append(sum(steps) / len(steps) if steps else 0)
+
+    # Calculate the average steps for each alpha
+    avg_steps = []
+    for file_path in filenames:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            steps = []
+            for line in lines[1:]:
+                parts = line.strip().split('|')
+                if len(parts) >= 4:  # Ensure there are enough parts
+                    has_reached = int(parts[0].strip())
+                    if has_reached:
+                        steps.append(float(parts[1].strip()))
+            avg_steps.append(sum(steps) / len(steps) if steps else 0)
+
+    # Compute the distance difference between each alpha and the optimal path
+    distance_differences = [abs(avg - control_steps[0]) for avg in avg_steps]
+    save_plot(alphas, "Average difference from optimal path", distance_differences)
+
 def setup_files(alphas):
 
     files = [f"Car Simulation/Tests/Results/Data/Exp_{alpha}" for alpha in alphas]
@@ -75,7 +113,7 @@ def setup_files(alphas):
     except FileNotFoundError:
         pass
     with open(control_file, 'a') as f:
-        f.write(f"{'Result':<15}|{'Steps':<15}|{'Obstacles':<15}|Time\n")
+        f.write(f"{'Result':<15}|{'Steps':<15}|{'Calculations':<15}|Time\n")
 
     for file in files:
         try:
@@ -83,7 +121,7 @@ def setup_files(alphas):
         except FileNotFoundError:
             pass    
         with open(file, 'a') as f:
-            f.write(f"{'Result':<15}|{'Steps':<15}|{'Obstacles':<15}|Time\n")
+            f.write(f"{'Result':<15}|{'Steps':<15}|{'Calculations':<15}|Time\n")
 
 
 def save_data(filename, data):
@@ -118,8 +156,8 @@ def gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obst
     lat.obstacleMap = loadConfig()
 
     # Run the full experiment
-    reached, route_len, obstacles, time = lat.plotPath(i, 0.05, skip=1, max_its=max_its, full=True)
-    save_data(filename_full, (reached, route_len, obstacles, time))
+    reached, route_len, calculations, time = lat.plotPath(i, 0.05, skip=1, max_its=max_its, full=True)
+    save_data(filename_full, (reached, route_len, calculations, time))
 
     # If the goal is not reached in the full experiment, skip further tests
     if not reached:
@@ -136,8 +174,8 @@ def gen_stats(i, alphas, lat_size, robot_coords, robot_radius, goal_coords, obst
         lat.obstacleMap = loadConfig()
 
         # Run the experiment and save data
-        reached, route_len, obstacles, time = lat.plotPath(i, alpha, skip=1, max_its=max_its)
-        save_data(filename, (reached, route_len, obstacles, time))
+        data = lat.plotPath(i, alpha, skip=1, max_its=max_its)
+        save_data(filename, data)
         lat.resetRobot()
 
 
@@ -146,10 +184,12 @@ lat_size = 100
 robot_radius = 2
 obstacle_max_radius = 2
 obstacle_count = 10
-exp_count = 100
+exp_count = 250
 robot_coords = (lat_size - 2 * robot_radius, 1 + 2 * robot_radius)
 goal_coords = (0 + lat_size/10,lat_size - lat_size/10)
 max_its = 350
+
+
 subprocess.run(["cleanup.bat"], shell= False)
 
 setup_files(alphas)
@@ -159,3 +199,4 @@ for i in tqdm(range(exp_count)):
 
 plot_data(alphas)
 plot_data([0.05], full = True)
+plot_distance(alphas, 0.05)
