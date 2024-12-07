@@ -3,7 +3,7 @@ from typing import override
 import numpy as np
 from matplotlib import pyplot as plt
 from shapely.geometry import Point, LineString
-from util import normalize_radians, get_bounded_indexes
+from util import normalize_radians, get_bounded_indexes, calculate_traveled_distance
 from robot import Polygon_Robot
 from lattice import Polygon_Lattice
 from goal import Goal
@@ -101,11 +101,11 @@ class Control_Lattice(Polygon_Lattice):
         full = bool(kwargs.get('full', False))
 
         if full:
-            reached, route, obs, time = self.calcFullPath(max_its)
+            reached, route, calculations, time = self.calcFullPath(max_its)
             fig, ax = self.drawFullForce(skip)
             savefile = f"Car Simulation/Tests/Results/Full/"
         else:
-            reached, route, obs, time = self.calcPath(max_its)
+            reached, route, calculations, time = self.calcPath(max_its)
             fig, ax = self.draw(skip)
             savefile = f"Car Simulation/Tests/Results/Partial/"
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
@@ -114,7 +114,7 @@ class Control_Lattice(Polygon_Lattice):
         plt.ylabel('Y')
         plt.savefig(savefile + f"{i}_R_{reached}_α_{alpha}.png", bbox_inches = 'tight')
         plt.close(fig)
-        return reached, len(route), obs, time
+        return reached, calculate_traveled_distance(route), calculations, time
 
     @override
     def calcPath(self, max_its):
@@ -122,11 +122,13 @@ class Control_Lattice(Polygon_Lattice):
         [gy, gx] = self.getForces()
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         res = False
+        calculations = 1
         for _ in range(max_its):
             current_point = route[-1,:]
 
             found = self.robot.seek_obstacles(self.obstacleMap)
             if found:
+                calculations = calculations + 1
                 [gy, gx] = self.getForces()
                 
 
@@ -143,25 +145,24 @@ class Control_Lattice(Polygon_Lattice):
             if (gx[row, col], gy[row, col]) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 x, y = get_bounded_indexes((col + np.random.randint(0,3) - 1, row + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
                 self.robot.digitalMap[x, y] = True
+                calculations = calculations + 1
                 [gy, gx] = self.getForces()
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
             if next_point == None:
-                print("Obstacle hit. Finishing simulation")
-                return False, route, 0, time.time() - start_time
+                return False, route, calculations, time.time() - start_time
             route = np.vstack( [route, next_point] )
 
         final_time = time.time() - start_time
-        obs_count = np.sum((self.obstacleMap == 1) & (self.robot.digitalMap == 1))
 
-        return res, route, obs_count, final_time
+        return res, route, calculations, final_time
 
     def calcFullPath(self, max_its):
         start_time = time.time()
         [gy, gx] = np.gradient(-self.getWholePotential())
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         res = False
-        obs_count = len([obs for obsX in self.obstacleMap for obs in obsX if obs])
+        calculations = 1
         for _ in range(max_its):
             current_point = route[-1,:]
 
@@ -178,14 +179,15 @@ class Control_Lattice(Polygon_Lattice):
             if (gx[row, col], gy[row, col]) == (0, 0) or self.robot.isStuck(self.getPotential()):
                 x, y = get_bounded_indexes((col + np.random.randint(0,3) - 1, row + np.random.randint(0,3) - 1), self.robot.digitalMap.shape)
                 self.robot.digitalMap[x, y] = True
+                calculations = calculations + 1
                 [gy, gx] = self.getForces()
 
             
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
             if next_point == None:
-                return False, route, 0, time.time() - start_time
+                return False, route, calculations, time.time() - start_time
             route = np.vstack( [route, next_point] )
 
         final_time = time.time() - start_time
-        return res, route, obs_count, final_time
+        return res, route, calculations, final_time
