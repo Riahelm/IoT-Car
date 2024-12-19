@@ -102,10 +102,11 @@ class Control_Lattice(Polygon_Lattice):
 
         if full:
             reached, route, calculations, time = self.calcFullPath(max_its)
+            scans = 0
             fig, ax = self.drawFullForce(skip)
             savefile = f"Car Simulation/Tests/Results/Full/"
         else:
-            reached, route, calculations, time = self.calcPath(max_its)
+            reached, route, calculations, scans, time = self.calcPath(max_its)
             fig, ax = self.draw(skip)
             savefile = f"Car Simulation/Tests/Results/Partial/"
         plt.plot(route[:,0], route[:,1], linestyle = 'dashed', linewidth=3)
@@ -114,7 +115,7 @@ class Control_Lattice(Polygon_Lattice):
         plt.ylabel('Y')
         plt.savefig(savefile + f"{i}_R_{reached}_α_{alpha}.png", bbox_inches = 'tight')
         plt.close(fig)
-        return reached, calculate_traveled_distance(route), calculations, time
+        return reached, calculate_traveled_distance(route), calculations, scans, time
 
     @override
     def calcPath(self, max_its):
@@ -123,9 +124,10 @@ class Control_Lattice(Polygon_Lattice):
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         res = False
         calculations = 1
+        scans = 0
         for _ in range(max_its):
             current_point = route[-1,:]
-
+            scans += 1
             found = self.robot.seek_obstacles(self.obstacleMap)
             if found:
                 calculations = calculations + 1
@@ -150,12 +152,12 @@ class Control_Lattice(Polygon_Lattice):
             
             next_point = self.robot.move(gy[row, col], gx[row, col], current_point, self.obstacleMap)
             if next_point == None:
-                return False, route, calculations, time.time() - start_time
+                return False, route, calculations, scans, time.time() - start_time
             route = np.vstack( [route, next_point] )
 
         final_time = time.time() - start_time
 
-        return res, route, calculations, final_time
+        return res, route, calculations, scans, final_time
 
     def calcFullPath(self, max_its):
         start_time = time.time()
@@ -163,6 +165,7 @@ class Control_Lattice(Polygon_Lattice):
         route = np.vstack([np.array(self.robot.coords), np.array(self.robot.coords)])
         res = False
         calculations = 1
+
         for _ in range(max_its):
             current_point = route[-1,:]
 
